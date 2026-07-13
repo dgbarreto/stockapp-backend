@@ -1,0 +1,16 @@
+services:
+  db:
+    image: timescale/timescaledb:2.28.1-pg17
+    container_name: stockapp-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: stockapp
+      POSTGRES_PASSWORD: stockapp
+      POSTGRES_DB: stockapp
+    ports:
+      - "5432:5432"
+    volumes:
+      - stockapp_db_data:/var/lib/postgresql/data
+
+volumes:
+  stockapp_db_data:
