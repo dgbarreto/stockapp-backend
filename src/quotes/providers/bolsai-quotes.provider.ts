@@ -11,11 +11,10 @@ export interface BolsaiFundamentals{
     roic: number;
     net_margin: number;
     gross_margin: number;
-    dividend_yield: number;
     net_debt_ebitda: number;
     lpa: number;
     vpa: number;
-    ebtida: number;
+    ebitda: number;
 }
 
 @Injectable()
@@ -32,6 +31,7 @@ export class BolsaiQuotesProvider {
         }
 
         if(!response.ok) {
+            console.log(response.statusText)
             throw new HttpException(`Error fetching fundamentals for ticker ${ticker}`, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
