@@ -64,4 +64,4 @@ jobs:
             --image=${{ env.IMAGE }}:${{ env.RELEASE_VERSION }} \
             --region=${{ env.REGION }} \
             --allow-unauthenticated \
-            --set-env-vars=DATABASE_URL="^:^DATABASE_URL=${{ secrets.DATABASE_URL }}:BOLSAI_API_KEY=${{ secrets.BOLSAI_API_KEY }}:JWT_SECRET=${{ secrets.JWT_SECRET }}:JWT_EXPIRES_IN=${{ secrets.JWT_EXPIRES_IN }}"
+            --set-env-vars="^:^DATABASE_URL=${{ secrets.DATABASE_URL }}:BOLSAI_API_KEY=${{ secrets.BOLSAI_API_KEY }}:JWT_SECRET=${{ secrets.JWT_SECRET }}:JWT_EXPIRES_IN=${{ secrets.JWT_EXPIRES_IN }}"
