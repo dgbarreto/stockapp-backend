@@ -33,3 +33,12 @@ model QuoteSnapshot {
   @@id([ticker, fetchedAt])
   @@map("quote_snapshots")
 }
+
+model User {
+  id String @id @default(uuid())
+  email String @unique
+  passwordHash String
+  name String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
