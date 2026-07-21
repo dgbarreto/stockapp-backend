@@ -18,17 +18,17 @@ model QuoteSnapshot {
   fetchedAt DateTime @default(now()) @map("fetched_at")
   closePrice Float @map("close_price")
   marketCap Float @map("market_cap")
-  pl Float
-  pvp Float
-  evEbitda Float @map("ev_ebitda")
-  roe Float
-  roic Float
-  netMargin Float @map("net_margin")
-  grossMargin Float @map("gross_margin")
-  netDebtEbitda Float @map("net_debt_ebitda")
-  lpa Float
-  vpa Float
-  ebitda Float
+  pl Float?
+  pvp Float?
+  evEbitda Float? @map("ev_ebitda")
+  roe Float?
+  roic Float?
+  netMargin Float? @map("net_margin")
+  grossMargin Float? @map("gross_margin")
+  netDebtEbitda Float? @map("net_debt_ebitda")
+  lpa Float?
+  vpa Float?
+  ebitda Float?
 
   @@id([ticker, fetchedAt])
   @@map("quote_snapshots")
@@ -41,4 +41,19 @@ model User {
   name String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  positions Position[]
+}
+
+model Position {
+  id String @id @default(uuid())
+  userId String @map("user_id")
+  user User @relation(fields: [userId], references: [id])
+  ticker String
+  quantity Int
+  avgPrice Float @map("avg_price")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, ticker])
+  @@map("positions")
 }

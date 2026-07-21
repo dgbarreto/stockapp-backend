@@ -4,17 +4,17 @@ export interface BolsaiFundamentals{
     ticker: string;
     close_price: number;
     market_cap: number;
-    pl: number;
-    pvp: number;
-    ev_ebitda: number;
-    roe: number;
-    roic: number;
-    net_margin: number;
-    gross_margin: number;
-    net_debt_ebitda: number;
-    lpa: number;
-    vpa: number;
-    ebitda: number;
+    pl: number | null;
+    pvp: number | null;
+    ev_ebitda: number | null;
+    roe: number | null;
+    roic: number | null;
+    net_margin: number | null;
+    gross_margin: number | null;
+    net_debt_ebitda: number | null;
+    lpa: number | null;
+    vpa: number | null;
+    ebitda: number | null;
 }
 
 @Injectable()
