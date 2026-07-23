@@ -29,4 +29,9 @@ export class PositionsController {
     remove(@Request() req, @Param('id') id: string) {
         return this.positionsService.remove(req.user.userId, id);
     }
+
+    @Get('summary')
+    getSummary(@Request() req) {
+        return this.positionsService.getSummary(req.user.userId);
+    }
 }
