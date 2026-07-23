@@ -9,5 +9,6 @@ import { PrismaModule } from 'src/prisma/prisma.module';
   imports: [PrismaModule],
   controllers: [QuotesController],
   providers: [QuotesService, BolsaiQuotesProvider, QuoteHistoryRepository],
+  exports: [QuotesService]
 })
 export class QuotesModule {}
