@@ -4,12 +4,14 @@ import { CreatePositionDto } from './dto/create-position.dto';
 import { UpdatePositionDto } from './dto/update-position.dto';
 import { QuotesService } from '../quotes/quotes.service';
 import { PortfolioSummary, PositionSummaryItem } from './dto/position-summary.dto';
+import { TickerLogoProvider } from './providers/ticker-logo.provider';
 
 @Injectable()
 export class PositionsService {
     constructor(
         private readonly positionsRepository: PositionsRepository,
-        private readonly quotesService: QuotesService
+        private readonly quotesService: QuotesService,
+        private readonly tickerLogoProvider: TickerLogoProvider,
     ) {}
 
     findAll(userId: string) {
@@ -45,16 +47,19 @@ export class PositionsService {
     async getSummary(userId: string): Promise<PortfolioSummary> {
         const positions = await this.positionsRepository.findAllByUser(userId);
 
-        const quotes = await Promise.allSettled(
-            positions.map((p) => this.quotesService.getFundamentals(p.ticker))
-        )
+         const [quotes, logos] = await Promise.all([
+            Promise.allSettled(positions.map((p) => this.quotesService.getFundamentals(p.ticker))),
+            Promise.allSettled(positions.map((p) => this.tickerLogoProvider.getLogoUrl(p.ticker))),
+        ]);
 
         const items: PositionSummaryItem[] = positions.map((position, i) => {
             const quote = quotes[i];
+            const logo = logos[i];
             const currentPrice = quote.status === 'fulfilled' ? quote.value.close_price : null;
             const currentValue = currentPrice !== null ? currentPrice * position.quantity : null;
             const profitPercent =
                 currentPrice !== null ? ((currentPrice - position.avgPrice) / position.avgPrice) * 100 : null;
+            const logoUrl = logo.status === 'fulfilled' ? logo.value : null;
 
             return{
                 id: position.id,
@@ -64,6 +69,7 @@ export class PositionsService {
                 currentPrice,
                 currentValue,
                 profitPercent,
+                logoUrl,
                 allocationPercent: null, // will be calculated later
             }
         });

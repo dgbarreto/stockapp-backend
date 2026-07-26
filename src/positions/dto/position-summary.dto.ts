@@ -6,7 +6,8 @@ export interface PositionSummaryItem {
     currentPrice: number | null;
     currentValue: number | null;
     profitPercent: number | null;
-    allocationPercent: number | null;
+    allocationPercent: number | null,
+    logoUrl: string | null;
 }
 
 export interface PortfolioSummary {
