@@ -57,3 +57,21 @@ model Position {
   @@unique([userId, ticker])
   @@map("positions")
 }
+
+model FiiSnapshot {
+  ticker String
+  fetchedAt DateTime @default(now()) @map("fetched_at")
+  name String
+  segment String?
+  managementType String? @map("management_type")
+  closePrice Float @map("close_price")
+  bookValuePerShare Float? @map("book_value_per_share")
+  pvp Float?
+  dividendYieldTtm Float? @map("dividend_yield_ttm")
+  netAssetValue Float? @map("net_asset_value")
+  sharesOutstanding Float? @map("shares_outstanding")
+  totalShareholders Int? @map("total_shareholders")
+
+  @@id([ticker, fetchedAt])
+  @@map("fii_snapshots")
+}
