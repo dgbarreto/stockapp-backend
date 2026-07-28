@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Position } from '../../generated/prisma/client';
+import { AssetType, Position } from '../../generated/prisma/client';
 
 @Injectable()
 export class PositionsRepository {
@@ -23,7 +23,7 @@ export class PositionsRepository {
         return this.prisma.position.findFirst({ where: { id, userId } });
     }
 
-    create(userId: string, data: { ticker: string; quantity: number; avgPrice: number }): Promise<Position> {
+    create(userId: string, data: { ticker: string; assetType: AssetType; quantity: number; avgPrice: number }): Promise<Position> {
         return this.prisma.position.create({ data: { userId, ...data } });
     }
 

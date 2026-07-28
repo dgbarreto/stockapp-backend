@@ -5,12 +5,14 @@ import { UpdatePositionDto } from './dto/update-position.dto';
 import { QuotesService } from '../quotes/quotes.service';
 import { PortfolioSummary, PositionSummaryItem } from './dto/position-summary.dto';
 import { TickerLogoProvider } from './providers/ticker-logo.provider';
+import { FiisService } from 'src/fiis/fiis.service';
 
 @Injectable()
 export class PositionsService {
     constructor(
         private readonly positionsRepository: PositionsRepository,
         private readonly quotesService: QuotesService,
+        private readonly fiisService: FiisService,
         private readonly tickerLogoProvider: TickerLogoProvider,
     ) {}
 
@@ -47,8 +49,12 @@ export class PositionsService {
     async getSummary(userId: string): Promise<PortfolioSummary> {
         const positions = await this.positionsRepository.findAllByUser(userId);
 
-         const [quotes, logos] = await Promise.all([
-            Promise.allSettled(positions.map((p) => this.quotesService.getFundamentals(p.ticker))),
+        const [quotes, logos] = await Promise.all([
+            Promise.allSettled(positions.map((p) =>
+                p.assetType === 'FII'
+                    ? this.fiisService.getFii(p.ticker)
+                    : this.quotesService.getFundamentals(p.ticker)
+            )),
             Promise.allSettled(positions.map((p) => this.tickerLogoProvider.getLogoUrl(p.ticker))),
         ]);
 
@@ -64,6 +70,7 @@ export class PositionsService {
             return{
                 id: position.id,
                 ticker: position.ticker,
+                assetType: position.assetType,
                 quantity: position.quantity,
                 avgPrice: position.avgPrice,
                 currentPrice,
