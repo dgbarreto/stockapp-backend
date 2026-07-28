@@ -1,4 +1,5 @@
-import { IsInt, IsNumber, IsPositive, IsString, Matches } from 'class-validator';
+import { IsEnum, IsInt, IsNumber, IsPositive, IsString, Matches } from 'class-validator';
+import { AssetType } from '../../../generated/prisma/client';
 
 export class CreatePositionDto {
   @IsString()
@@ -12,4 +13,7 @@ export class CreatePositionDto {
   @IsNumber()
   @IsPositive()
   avgPrice!: number;
+
+  @IsEnum(AssetType)
+  assetType!: AssetType;
 }

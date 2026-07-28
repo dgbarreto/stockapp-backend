@@ -5,9 +5,10 @@ import { PositionsService } from './positions.service';
 import { PositionsRepository } from './positions.repository';
 import { QuotesModule } from '../quotes/quotes.module';
 import { TickerLogoProvider } from './providers/ticker-logo.provider';
+import { FiisModule } from 'src/fiis/fiis.module';
 
 @Module({
-    imports: [PrismaModule, QuotesModule],
+    imports: [PrismaModule, QuotesModule, FiisModule],
     controllers: [PositionsController],
     providers: [PositionsService, PositionsRepository, TickerLogoProvider],
 })

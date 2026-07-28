@@ -44,11 +44,17 @@ model User {
   positions Position[]
 }
 
+enum AssetType {
+  STOCK
+  FII
+}
+
 model Position {
   id String @id @default(uuid())
   userId String @map("user_id")
   user User @relation(fields: [userId], references: [id])
   ticker String
+  assetType AssetType @default(STOCK) @map("asset_type")
   quantity Int
   avgPrice Float @map("avg_price")
   createdAt DateTime @default(now()) @map("created_at")
