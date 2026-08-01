@@ -9,6 +9,15 @@ import { QuotesService } from 'src/quotes/quotes.service';
 import { FiisService } from 'src/fiis/fiis.service';
 import { KnownTickersRepository } from 'src/known-tickers/known-tickers.repository';
 import { guessAssetTypeOrder } from './ticker-type.util';
+import { randomUUID } from 'crypto';
+import { parseB3NegociacaoFile, parseBrDate } from './spreadsheet-parser.util';
+
+export interface ImportOrdersResult {
+    importBatchId: string;
+    totalRows: number;
+    created: number;
+    skipped: { row: number; ticker: string | null; reason: string }[];
+}
 
 @Injectable()
 export class OrdersService {
@@ -179,5 +188,98 @@ export class OrdersService {
                 },
             );
         }
+    }
+
+    async importFromFile(userId: string, buffer: Buffer): Promise<ImportOrdersResult> {
+        const rows = parseB3NegociacaoFile(buffer);
+        const importBatchId = randomUUID();
+        const skipped: ImportOrdersResult['skipped'] = [];
+
+        type ValidRow = {
+            rowIndex: number;
+            ticker: string;
+            side: 'BUY' | 'SELL';
+            quantity: number;
+            price: number;
+            executedAt: Date;
+        };
+        const validRows: ValidRow[] = [];
+
+        rows.forEach((row, index) => {
+            const rowNumber = index + 2; // +1 cabeçalho, +1 base 1 (bate com a linha da planilha)
+            const ticker = row['Código de Negociação']?.toString().toUpperCase().trim();
+            const mercado = row['Mercado']?.toString().trim();
+            const tipo = row['Tipo de Movimentação']?.toString().trim();
+
+            if (!ticker || !row['Data do Negócio'] || !row['Quantidade'] || !row['Preço']) {
+                skipped.push({ row: rowNumber, ticker: ticker ?? null, reason: 'Linha incompleta' });
+                return;
+            }
+            if (mercado !== 'Mercado à Vista') {
+                skipped.push({ row: rowNumber, ticker, reason: `Mercado não suportado: ${mercado}` });
+                return;
+            }
+            if (tipo !== 'Compra' && tipo !== 'Venda') {
+                skipped.push({
+                    row: rowNumber,
+                    ticker,
+                    reason: `Tipo de movimentação não suportado: ${tipo}`,
+                });
+                return;
+            }
+
+            validRows.push({
+                rowIndex: rowNumber,
+                ticker,
+                side: tipo === 'Compra' ? 'BUY' : 'SELL',
+                quantity: Number(row['Quantidade']),
+                price: Number(row['Preço']),
+                executedAt: parseBrDate(row['Data do Negócio']),
+            });
+        });
+
+        // Resolve o tipo de ativo uma vez por ticker único, não uma vez por linha - é aqui que o
+        // known_tickers/heurística de sufixo economizam chamada da bolsai de verdade.
+        const uniqueTickers = [...new Set(validRows.map((r) => r.ticker))];
+        const assetTypeByTicker = new Map<string, AssetType | null>();
+        for (const ticker of uniqueTickers) {
+            assetTypeByTicker.set(ticker, await this.resolveAssetType(ticker));
+        }
+
+        const ordersToCreate = validRows.filter((r) => {
+            const assetType = assetTypeByTicker.get(r.ticker);
+            if (!assetType) {
+                skipped.push({ row: r.rowIndex, ticker: r.ticker, reason: 'Ticker não reconhecido' });
+                return false;
+            }
+            return true;
+        });
+
+        let created = 0;
+        if (ordersToCreate.length > 0) {
+            await this.prisma.$transaction(async (tx) => {
+                for (const row of ordersToCreate) {
+                    await this.ordersRepository.createTx(tx, userId, {
+                        ticker: row.ticker,
+                        assetType: assetTypeByTicker.get(row.ticker)!,
+                        side: row.side,
+                        quantity: row.quantity,
+                        price: row.price,
+                        fees: 0,
+                        executedAt: row.executedAt,
+                        source: 'IMPORT',
+                        importBatchId,
+                    });
+                    created++;
+                }
+
+                const affectedTickers = new Set(ordersToCreate.map((r) => r.ticker));
+                for (const ticker of affectedTickers) {
+                    await this.recalculatePosition(tx, userId, ticker, assetTypeByTicker.get(ticker)!);
+                }
+            });
+        }
+
+        return { importBatchId, totalRows: rows.length, created, skipped };
     }
 }
