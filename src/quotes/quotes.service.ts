@@ -4,12 +4,15 @@ import {
   BolsaiFundamentals,
 } from './providers/bolsai-quotes.provider';
 import { QuoteHistoryRepository } from './quote-history.repository';
+import { KnownTickersRepository } from 'src/known-tickers/known-tickers.repository';
+
 
 @Injectable()
 export class QuotesService {
   constructor(
     private readonly bolsaiQuotesProvider: BolsaiQuotesProvider,
     private readonly quoteHistoryRepository: QuoteHistoryRepository,
+    private readonly knownTickersRepository: KnownTickersRepository,
   ) {}
 
   async getFundamentals(ticker: string): Promise<BolsaiFundamentals> {
@@ -17,6 +20,7 @@ export class QuotesService {
     const fundamentals =
       await this.bolsaiQuotesProvider.getFundamentals(normalizedTicker);
     await this.quoteHistoryRepository.save(normalizedTicker, fundamentals);
+    await this.knownTickersRepository.upsert(normalizedTicker, 'STOCK');
     return fundamentals;
   }
 
