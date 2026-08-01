@@ -42,6 +42,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   positions Position[]
+  orders Order[]
 }
 
 enum AssetType {
@@ -80,4 +81,34 @@ model FiiSnapshot {
 
   @@id([ticker, fetchedAt])
   @@map("fii_snapshots")
+}
+
+enum OrderSide {
+  BUY
+  SELL
+}
+
+enum OrderSource {
+  MANUAL
+  IMPORT
+}
+
+model Order {
+  id            String      @id @default(uuid())
+  userId        String      @map("user_id")
+  user          User        @relation(fields: [userId], references: [id])
+  ticker        String
+  assetType     AssetType   @default(STOCK) @map("asset_type")
+  side          OrderSide
+  quantity      Int
+  price         Float
+  fees          Float       @default(0)
+  executedAt    DateTime    @map("executed_at")
+  source        OrderSource @default(MANUAL)
+  importBatchId String?     @map("import_batch_id")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+
+  @@index([userId, ticker])
+  @@map("orders")
 }
