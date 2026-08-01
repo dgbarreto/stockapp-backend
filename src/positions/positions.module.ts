@@ -8,8 +8,9 @@ import { TickerLogoProvider } from './providers/ticker-logo.provider';
 import { FiisModule } from 'src/fiis/fiis.module';
 
 @Module({
-    imports: [PrismaModule, QuotesModule, FiisModule],
-    controllers: [PositionsController],
-    providers: [PositionsService, PositionsRepository, TickerLogoProvider],
+  providers: [PositionsService, PositionsRepository, TickerLogoProvider],
+  controllers: [PositionsController],
+  exports: [PositionsRepository],
+  imports: [PrismaModule, QuotesModule, FiisModule],
 })
 export class PositionsModule {}

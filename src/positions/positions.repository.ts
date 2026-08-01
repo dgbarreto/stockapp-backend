@@ -1,37 +1,36 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { AssetType, Position } from '../../generated/prisma/client';
+import { AssetType, Position, Prisma } from '../../generated/prisma/client';
 
 @Injectable()
 export class PositionsRepository {
-    constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-    findAllByUser(userId: string): Promise<Position[]> {
-        return this.prisma.position.findMany({
-            where: { userId },
-            orderBy: { ticker: 'asc' },
-        });
-    }
+  findAllByUser(userId: string): Promise<Position[]> {
+    return this.prisma.position.findMany({
+      where: { userId },
+      orderBy: { ticker: 'asc' },
+    });
+  }
 
-    findByUserAndTicker(userId: string, ticker: string): Promise<Position | null> {
-        return this.prisma.position.findUnique({
-            where: { userId_ticker: { userId, ticker } },
-        });
-    }
+  async upsertForRecalculation(
+    tx: Prisma.TransactionClient,
+    userId: string,
+    ticker: string,
+    data: { assetType: AssetType; quantity: number; avgPrice: number },
+  ): Promise<Position> {
+    return tx.position.upsert({
+      where: { userId_ticker: { userId, ticker } },
+      create: { userId, ticker, ...data },
+      update: { quantity: data.quantity, avgPrice: data.avgPrice },
+    });
+  }
 
-    findByIdForUser(id: string, userId: string): Promise<Position | null> {
-        return this.prisma.position.findFirst({ where: { id, userId } });
-    }
-
-    create(userId: string, data: { ticker: string; assetType: AssetType; quantity: number; avgPrice: number }): Promise<Position> {
-        return this.prisma.position.create({ data: { userId, ...data } });
-    }
-
-    update(id: string, data: { quantity?: number; avgPrice?: number }): Promise<Position> {
-        return this.prisma.position.update({ where: { id }, data });
-    }
-
-    delete(id: string): Promise<Position> {
-        return this.prisma.position.delete({ where: { id } });
-    }
+  async deleteByUserAndTicker(
+    tx: Prisma.TransactionClient,
+    userId: string,
+    ticker: string,
+  ): Promise<void> {
+    await tx.position.deleteMany({ where: { userId, ticker } });
+  }
 }

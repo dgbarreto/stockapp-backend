@@ -9,6 +9,6 @@ import { PrismaModule } from 'src/prisma/prisma.module';
   imports: [PrismaModule],
   controllers: [FiisController],
   providers: [FiisService, BolsaiFiisProvider, FiiHistoryRepository],
-  exports: [FiisService]
+  exports: [FiisService],
 })
 export class FiisModule {}
