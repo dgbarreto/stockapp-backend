@@ -112,3 +112,11 @@ model Order {
   @@index([userId, ticker])
   @@map("orders")
 }
+
+model KnownTicker {
+  ticker    String    @id
+  assetType AssetType @map("asset_type")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@map("known_tickers")
+}

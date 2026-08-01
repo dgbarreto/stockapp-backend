@@ -4,9 +4,10 @@ import { QuotesService } from './quotes.service';
 import { BolsaiQuotesProvider } from './providers/bolsai-quotes.provider';
 import { QuoteHistoryRepository } from './quote-history.repository';
 import { PrismaModule } from 'src/prisma/prisma.module';
+import { KnownTickersModule } from 'src/known-tickers/known-tickers.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, KnownTickersModule],
   controllers: [QuotesController],
   providers: [QuotesService, BolsaiQuotesProvider, QuoteHistoryRepository],
   exports: [QuotesService],
