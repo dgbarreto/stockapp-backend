@@ -10,6 +10,10 @@ export interface PositionSummaryItem {
   allocationPercent: number | null;
   logoUrl: string | null;
   dividendPerShareTtm: number | null;
+  eps: number | null;
+  bookValuePerShare: number | null;
+  priceToSalesRatio: number | null;
+  earningsCagr5y: number | null;
 }
 
 export interface PortfolioSummary {
