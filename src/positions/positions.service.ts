@@ -12,6 +12,7 @@ import { TickerLogoProvider } from './providers/ticker-logo.provider';
 import { FiisService } from 'src/fiis/fiis.service';
 import { DIVIDENDS_PROVIDER } from './providers/dividends.provider';
 import type { DividendsProvider } from './providers/dividends.provider';
+import type { BolsaiFundamentals } from '../quotes/providers/bolsai-quotes.provider';
 
 @Injectable()
 export class PositionsService {
@@ -31,7 +32,7 @@ export class PositionsService {
   async getSummary(userId: string): Promise<PortfolioSummary> {
     const positions = await this.positionsRepository.findAllByUser(userId);
 
-    const [quotes, logos, dividends] = await Promise.all([
+    const [quotes, logos, dividendMetrics] = await Promise.all([
       Promise.allSettled(
         positions.map((p) =>
           p.assetType === 'FII'
@@ -44,7 +45,7 @@ export class PositionsService {
       ),
       Promise.allSettled(
         positions.map((p) =>
-          this.dividendsProvider.getDividendPerShareTtm(p.ticker),
+          this.dividendsProvider.getDividendMetrics(p.ticker),
         ),
       ),
     ]);
@@ -52,7 +53,7 @@ export class PositionsService {
     const items: PositionSummaryItem[] = positions.map((position, i) => {
       const quote = quotes[i];
       const logo = logos[i];
-      const dividend = dividends[i];
+      const dividends = dividendMetrics[i];
       const currentPrice =
         quote.status === 'fulfilled' ? quote.value.close_price : null;
       const currentValue =
@@ -63,7 +64,28 @@ export class PositionsService {
           : null;
       const logoUrl = logo.status === 'fulfilled' ? logo.value : null;
       const dividendPerShareTtm =
-        dividend.status === 'fulfilled' ? dividend.value : null;
+        dividends.status === 'fulfilled'
+          ? dividends.value.dividendPerShareTtm
+          : null;
+
+      const fundamentals =
+        quote.status === 'fulfilled' && position.assetType !== 'FII'
+          ? (quote.value as BolsaiFundamentals)
+          : null;
+      const eps = fundamentals?.lpa ?? null;
+      const bookValuePerShare = fundamentals?.vpa ?? null;
+      const priceToSalesRatio = fundamentals?.p_sr ?? null;
+
+      // earningsCagr5y: pra ação vem da bolsai (CAGR de lucro de verdade).
+      // FII não tem "lucro" no sentido contábil, então usamos o CAGR de
+      // provento calculado a partir do histórico de dividendos do Yahoo —
+      // mesmo campo do domínio, fonte e significado diferentes por trás.
+      const earningsCagr5y =
+        position.assetType === 'FII'
+          ? dividends.status === 'fulfilled'
+            ? dividends.value.distributionGrowthRate
+            : null
+          : (fundamentals?.cagr_earnings_5y ?? null);
 
       return {
         id: position.id,
@@ -76,6 +98,10 @@ export class PositionsService {
         profitPercent,
         logoUrl,
         dividendPerShareTtm,
+        eps,
+        bookValuePerShare,
+        priceToSalesRatio,
+        earningsCagr5y,
         allocationPercent: null, // will be calculated later
       };
     });
