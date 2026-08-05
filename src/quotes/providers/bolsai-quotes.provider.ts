@@ -15,6 +15,8 @@ export interface BolsaiFundamentals {
   lpa: number | null;
   vpa: number | null;
   ebitda: number | null;
+  p_sr: number | null;
+  cagr_earnings_5y: number | null;
 }
 
 @Injectable()
