@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Inject
 } from '@nestjs/common';
 import { PositionsRepository } from './positions.repository';
 import { QuotesService } from '../quotes/quotes.service';
@@ -9,6 +10,8 @@ import {
 } from './dto/position-summary.dto';
 import { TickerLogoProvider } from './providers/ticker-logo.provider';
 import { FiisService } from 'src/fiis/fiis.service';
+import { DIVIDENDS_PROVIDER } from './providers/dividends.provider';
+import type { DividendsProvider } from './providers/dividends.provider';
 
 @Injectable()
 export class PositionsService {
@@ -17,6 +20,8 @@ export class PositionsService {
     private readonly quotesService: QuotesService,
     private readonly fiisService: FiisService,
     private readonly tickerLogoProvider: TickerLogoProvider,
+    @Inject(DIVIDENDS_PROVIDER)
+    private readonly dividendsProvider: DividendsProvider,
   ) { }
 
   findAll(userId: string) {
@@ -26,7 +31,7 @@ export class PositionsService {
   async getSummary(userId: string): Promise<PortfolioSummary> {
     const positions = await this.positionsRepository.findAllByUser(userId);
 
-    const [quotes, logos] = await Promise.all([
+    const [quotes, logos, dividends] = await Promise.all([
       Promise.allSettled(
         positions.map((p) =>
           p.assetType === 'FII'
@@ -37,11 +42,17 @@ export class PositionsService {
       Promise.allSettled(
         positions.map((p) => this.tickerLogoProvider.getLogoUrl(p.ticker)),
       ),
+      Promise.allSettled(
+        positions.map((p) =>
+          this.dividendsProvider.getDividendPerShareTtm(p.ticker),
+        ),
+      ),
     ]);
 
     const items: PositionSummaryItem[] = positions.map((position, i) => {
       const quote = quotes[i];
       const logo = logos[i];
+      const dividend = dividends[i];
       const currentPrice =
         quote.status === 'fulfilled' ? quote.value.close_price : null;
       const currentValue =
@@ -51,6 +62,8 @@ export class PositionsService {
           ? ((currentPrice - position.avgPrice) / position.avgPrice) * 100
           : null;
       const logoUrl = logo.status === 'fulfilled' ? logo.value : null;
+      const dividendPerShareTtm =
+        dividend.status === 'fulfilled' ? dividend.value : null;
 
       return {
         id: position.id,
@@ -62,6 +75,7 @@ export class PositionsService {
         currentValue,
         profitPercent,
         logoUrl,
+        dividendPerShareTtm,
         allocationPercent: null, // will be calculated later
       };
     });

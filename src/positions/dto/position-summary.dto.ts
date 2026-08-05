@@ -9,6 +9,7 @@ export interface PositionSummaryItem {
   profitPercent: number | null;
   allocationPercent: number | null;
   logoUrl: string | null;
+  dividendPerShareTtm: number | null;
 }
 
 export interface PortfolioSummary {
