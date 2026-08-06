@@ -6,13 +6,12 @@ import { PositionsRepository } from './positions.repository';
 import { QuotesModule } from '../quotes/quotes.module';
 import { TickerLogoProvider } from './providers/ticker-logo.provider';
 import { FiisModule } from 'src/fiis/fiis.module';
-import { DIVIDENDS_PROVIDER } from './providers/dividends.provider';
-import { YahooDividendsProvider } from './providers/yahoo-dividends.provider';
+import { DividendsModule } from 'src/dividends/dividends.module';
 
 @Module({
-  providers: [PositionsService, PositionsRepository, TickerLogoProvider, { provide: DIVIDENDS_PROVIDER, useClass: YahooDividendsProvider }],
+  providers: [PositionsService, PositionsRepository, TickerLogoProvider],
   controllers: [PositionsController],
   exports: [PositionsRepository],
-  imports: [PrismaModule, QuotesModule, FiisModule],
+  imports: [PrismaModule, QuotesModule, FiisModule, DividendsModule],
 })
 export class PositionsModule {}
