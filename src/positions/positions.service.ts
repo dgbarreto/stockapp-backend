@@ -10,8 +10,8 @@ import {
 } from './dto/position-summary.dto';
 import { TickerLogoProvider } from './providers/ticker-logo.provider';
 import { FiisService } from 'src/fiis/fiis.service';
-import { DIVIDENDS_PROVIDER } from './providers/dividends.provider';
-import type { DividendsProvider } from './providers/dividends.provider';
+import { DIVIDENDS_PROVIDER } from '../dividends/providers/dividends.provider';
+import type { DividendsProvider } from '../dividends/providers/dividends.provider';
 import type { BolsaiFundamentals } from '../quotes/providers/bolsai-quotes.provider';
 
 @Injectable()
