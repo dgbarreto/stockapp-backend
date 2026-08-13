@@ -13,7 +13,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET as string,
+      secretOrKey: process.env.JWT_PUBLIC_KEY as string,
+      algorithms: ['RS256'],
+      issuer: 'stockapp-backend',
+      audience: 'stockapp-api',
     });
   }
 
