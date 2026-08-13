@@ -1,0 +1,179 @@
+swagger: '2.0'
+info:
+  title: stockapp-api
+  description: API Gateway do StockApp
+  version: 1.0.0
+schemes:
+  - https
+produces:
+  - application/json
+x-google-backend:
+  address: https://stockapp-backend-1024353973147.southamerica-east1.run.app
+securityDefinitions:
+  stockapp_jwt:
+    authorizationUrl: ""
+    flow: "implicit"
+    type: "oauth2"
+    x-google-issuer: "stockapp-backend"
+    x-google-jwks_uri: "https://stockapp-backend-1024353973147.southamerica-east1.run.app/.well-known/jwks.json"
+    x-google-audiences: "stockapp-api"
+paths:
+  /:
+    get:
+      summary: Health check
+      operationId: getRoot
+      responses:
+        '200':
+          description: OK
+  /auth/register:
+    post:
+      summary: Cadastro de usuário
+      operationId: authRegister
+      responses:
+        '201':
+          description: Created
+  /auth/login:
+    post:
+      summary: Login
+      operationId: authLogin
+      responses:
+        '200':
+          description: OK
+  /auth/me:
+    get:
+      summary: Dados do usuário logado
+      operationId: authMe
+      security:
+        - stockapp_jwt: []
+      responses:
+        '200':
+          description: OK
+  /quotes/{ticker}:
+    get:
+      summary: Cotação de uma ação
+      operationId: quotesGetByTicker
+      security:
+        - stockapp_jwt: []
+      parameters:
+        - name: ticker
+          in: path
+          required: true
+          type: string
+      responses:
+        '200':
+          description: OK
+  /quotes/{ticker}/history:
+    get:
+      summary: Histórico de cotação de uma ação
+      operationId: quotesGetHistory
+      security:
+        - stockapp_jwt: []
+      parameters:
+        - name: ticker
+          in: path
+          required: true
+          type: string
+      responses:
+        '200':
+          description: OK
+  /fiis/{ticker}:
+    get:
+      summary: Dados de um FII
+      operationId: fiisGetByTicker
+      security:
+        - stockapp_jwt: []
+      parameters:
+        - name: ticker
+          in: path
+          required: true
+          type: string
+      responses:
+        '200':
+          description: OK
+  /fiis/{ticker}/history:
+    get:
+      summary: Histórico de um FII
+      operationId: fiisGetHistory
+      security:
+        - stockapp_jwt: []
+      parameters:
+        - name: ticker
+          in: path
+          required: true
+          type: string
+      responses:
+        '200':
+          description: OK
+  /positions:
+    get:
+      summary: Lista de posições
+      operationId: positionsList
+      security:
+        - stockapp_jwt: []
+      responses:
+        '200':
+          description: OK
+  /positions/summary:
+    get:
+      summary: Resumo agregado da carteira
+      operationId: positionsSummary
+      security:
+        - stockapp_jwt: []
+      responses:
+        '200':
+          description: OK
+  /orders:
+    get:
+      summary: Lista de ordens
+      operationId: ordersList
+      security:
+        - stockapp_jwt: []
+      responses:
+        '200':
+          description: OK
+    post:
+      summary: Criar ordem manual
+      operationId: ordersCreate
+      security:
+        - stockapp_jwt: []
+      responses:
+        '201':
+          description: Created
+  /orders/import:
+    post:
+      summary: Importar ordens via arquivo (CSV/XLSX)
+      operationId: ordersImport
+      security:
+        - stockapp_jwt: []
+      consumes:
+        - multipart/form-data
+      responses:
+        '201':
+          description: Created
+  /orders/{id}:
+    patch:
+      summary: Atualizar ordem
+      operationId: ordersUpdate
+      security:
+        - stockapp_jwt: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+      responses:
+        '200':
+          description: OK
+    delete:
+      summary: Remover ordem
+      operationId: ordersDelete
+      security:
+        - stockapp_jwt: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+      responses:
+        '200':
+          description: OK

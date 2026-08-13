@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stockapp-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stockapp-backend
+  template:
+    metadata:
+      labels:
+        app: stockapp-backend
+    spec:
+      containers:
+        - name: stockapp-backend
+          image: southamerica-east1-docker.pkg.dev/stockapp-dgbarreto/stockapp/stockapp-backend:0.5.3
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
