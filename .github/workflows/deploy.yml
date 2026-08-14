@@ -66,7 +66,7 @@ jobs:
             --image=${{ env.IMAGE }}:${{ env.RELEASE_VERSION }} \
             --region=${{ env.REGION }} \
             --allow-unauthenticated \
-            --set-env-vars="DATABASE_URL=${{ secrets.DATABASE_URL }},BOLSAI_API_KEY=${{ secrets.BOLSAI_API_KEY }},JWT_EXPIRES_IN=${{ secrets.JWT_EXPIRES_IN }},JWT_PUBLIC_KEY=${{ secrets.JWT_PUBLIC_KEY }}" \
+            --set-env-vars="DATABASE_URL=${{ secrets.DATABASE_URL }},BOLSAI_API_KEY=${{ secrets.BOLSAI_API_KEY }},JWT_EXPIRES_IN=${{ secrets.JWT_EXPIRES_IN }},JWT_PUBLIC_KEY=jwt-public-key:latest" \
             --set-secrets="JWT_PRIVATE_KEY=jwt-private-key:latest"
 
       - name: Create API Gateway config
