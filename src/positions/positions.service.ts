@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  Inject
-} from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { PositionsRepository } from './positions.repository';
 import { QuotesService } from '../quotes/quotes.service';
 import {
@@ -23,7 +20,7 @@ export class PositionsService {
     private readonly tickerLogoProvider: TickerLogoProvider,
     @Inject(DIVIDENDS_PROVIDER)
     private readonly dividendsProvider: DividendsProvider,
-  ) { }
+  ) {}
 
   findAll(userId: string) {
     return this.positionsRepository.findAllByUser(userId);

@@ -25,4 +25,4 @@ import { JwksController } from './jwks.controller';
   controllers: [AuthController, JwksController],
   providers: [AuthService, JwtStrategy],
 })
-export class AuthModule { }
+export class AuthModule {}

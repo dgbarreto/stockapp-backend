@@ -1,4 +1,4 @@
-import { Injectable, HttpException, HttpStatus, Inject } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 
 export interface BolsaiFundamentals {
   ticker: string;

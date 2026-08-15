@@ -9,7 +9,13 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { KnownTickersModule } from 'src/known-tickers/known-tickers.module';
 
 @Module({
-  imports: [PrismaModule, PositionsModule, QuotesModule, FiisModule, KnownTickersModule],
+  imports: [
+    PrismaModule,
+    PositionsModule,
+    QuotesModule,
+    FiisModule,
+    KnownTickersModule,
+  ],
   controllers: [OrdersController],
   providers: [OrdersService, OrdersRepository],
 })
