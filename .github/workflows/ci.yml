@@ -30,4 +30,9 @@ jobs:
         run: npm run build
 
       - name: Unit tests
-        run: npm test
+        run: npm test -- --coverage
+
+      - name: SonarQube Cloud Scan
+        uses: SonarSource/sonarqube-scan-action@v4
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
