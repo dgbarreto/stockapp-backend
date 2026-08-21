@@ -1,4 +1,7 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { RedisCacheService } from '../../cache/redis-cache.service';
+
+const FII_TTL_SECONDS = 6 * 60 * 60; // 6h
 
 export interface BolsaiFii {
   ticker: string;
@@ -17,8 +20,15 @@ export interface BolsaiFii {
 @Injectable()
 export class BolsaiFiisProvider {
   private readonly baseUrl: string = 'https://api.usebolsai.com';
+  constructor(private readonly cache: RedisCacheService) {}
 
   async getFii(ticker: string): Promise<BolsaiFii> {
+    const cacheKey = `bolsai:fiis:${ticker}`;
+    const cached = await this.cache.get<BolsaiFii>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     const response = await fetch(`${this.baseUrl}/api/v1/fiis/${ticker}`, {
       headers: { 'X-API-KEY': process.env.BOLSAI_API_KEY ?? '' },
     });
@@ -35,6 +45,8 @@ export class BolsaiFiisProvider {
       );
     }
 
-    return response.json() as Promise<BolsaiFii>;
+    const data = (await response.json()) as BolsaiFii;
+    await this.cache.set(cacheKey, data, FII_TTL_SECONDS);
+    return data;
   }
 }

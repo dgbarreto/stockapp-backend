@@ -6,9 +6,10 @@ import { FiiHistoryRepository } from './fii-history.repository';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { KnownTickersModule } from 'src/known-tickers/known-tickers.module';
 import { DividendsModule } from 'src/dividends/dividends.module';
+import { CacheModule } from 'src/cache/cache.module';
 
 @Module({
-  imports: [PrismaModule, KnownTickersModule, DividendsModule],
+  imports: [PrismaModule, KnownTickersModule, DividendsModule, CacheModule],
   controllers: [FiisController],
   providers: [FiisService, BolsaiFiisProvider, FiiHistoryRepository],
   exports: [FiisService],
