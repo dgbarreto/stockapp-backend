@@ -20,7 +20,7 @@ export interface BolsaiFii {
 @Injectable()
 export class BolsaiFiisProvider {
   private readonly baseUrl: string = 'https://api.usebolsai.com';
-  constructor(private readonly cache: RedisCacheService) { }
+  constructor(private readonly cache: RedisCacheService) {}
 
   async getFii(ticker: string): Promise<BolsaiFii> {
     const cacheKey = `bolsai:fiis:${ticker}`;

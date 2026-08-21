@@ -41,7 +41,7 @@ describe('BolsaiQuotesProvider', () => {
     jest.spyOn(global, 'fetch').mockResolvedValue({
       ok: true,
       status: 200,
-      json: async () => apiResponse,
+      json: () => Promise.resolve(apiResponse),
     } as Response);
 
     const result = await provider.getFundamentals('PETR4');
