@@ -14,6 +14,10 @@ export class UsersRepository {
     return this.prisma.user.findUnique({ where: { id } });
   }
 
+  updatePassword(id: string, passwordHash: string): Promise<User> {
+    return this.prisma.user.update({ where: { id }, data: { passwordHash } });
+  }
+
   create(data: {
     email: string;
     passwordHash: string;

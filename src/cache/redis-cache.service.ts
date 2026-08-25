@@ -19,4 +19,17 @@ export class RedisCacheService {
   async set<T>(key: string, value: T, ttlSeconds: number): Promise<void> {
     await this.client.set(key, value, { ex: ttlSeconds });
   }
+
+  async del(key: string): Promise<void> {
+    await this.client.del(key);
+  }
+
+  /** Incrementa um contador; expira na primeira vez que a chave é criada (janela fixa). */
+  async incr(key: string, ttlSeconds: number): Promise<number> {
+    const value = await this.client.incr(key);
+    if (value === 1) {
+      await this.client.expire(key, ttlSeconds);
+    }
+    return value;
+  }
 }
