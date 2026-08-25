@@ -57,8 +57,20 @@ jobs:
 
       - name: Push image
         run: |
-          docker push ${{ env.IMAGE }}:${{ env.RELEASE_VERSION }}
-          docker push ${{ env.IMAGE }}:latest
+          push_with_retry() {
+            for attempt in 1 2 3; do
+              gcloud auth configure-docker southamerica-east1-docker.pkg.dev --quiet
+              if docker push "$1"; then
+                return 0
+              fi
+              echo "Push of $1 failed (attempt $attempt/3), retrying in 10s..."
+              sleep 10
+            done
+            return 1
+          }
+
+          push_with_retry ${{ env.IMAGE }}:${{ env.RELEASE_VERSION }}
+          push_with_retry ${{ env.IMAGE }}:latest
 
       - name: Deploy to Cloud Run
         run: |
@@ -66,7 +78,7 @@ jobs:
             --image=${{ env.IMAGE }}:${{ env.RELEASE_VERSION }} \
             --region=${{ env.REGION }} \
             --allow-unauthenticated \
-            --set-env-vars="DATABASE_URL=${{ secrets.DATABASE_URL }},BOLSAI_API_KEY=${{ secrets.BOLSAI_API_KEY }},JWT_EXPIRES_IN=${{ secrets.JWT_EXPIRES_IN }},UPSTASH_REDIS_REST_URL=${{ secrets.UPSTASH_REDIS_REST_URL }},UPSTASH_REDIS_REST_TOKEN=${{ secrets.UPSTASH_REDIS_REST_TOKEN }}" \
+            --set-env-vars="DATABASE_URL=${{ secrets.DATABASE_URL }},BOLSAI_API_KEY=${{ secrets.BOLSAI_API_KEY }},JWT_EXPIRES_IN=${{ secrets.JWT_EXPIRES_IN }},UPSTASH_REDIS_REST_URL=${{ secrets.UPSTASH_REDIS_REST_URL }},UPSTASH_REDIS_REST_TOKEN=${{ secrets.UPSTASH_REDIS_REST_TOKEN }},RESEND_API_KEY=${{ secrets.RESEND_API_KEY }},RESEND_FROM_EMAIL=${{ secrets.RESEND_FROM_EMAIL }}" \
             --set-secrets="JWT_PRIVATE_KEY=jwt-private-key:latest,JWT_PUBLIC_KEY=jwt-public-key:latest"
 
       - name: Create API Gateway config
