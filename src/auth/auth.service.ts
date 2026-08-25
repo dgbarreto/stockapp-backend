@@ -70,83 +70,85 @@ export class AuthService {
   }
 
   async forgotPassword(dto: ForgotPasswordDto): Promise<{ message: string }> {
-  const user = await this.usersRepository.findByEmail(dto.email);
-  const genericResponse = {
-    message: 'Se o e-mail existir, enviamos um código de confirmação.',
-  };
+    const user = await this.usersRepository.findByEmail(dto.email);
+    const genericResponse = {
+      message: 'Se o e-mail existir, enviamos um código de confirmação.',
+    };
 
-  if (!user) {
+    if (!user) {
+      return genericResponse;
+    }
+
+    const code = randomInt(100000, 1000000).toString();
+    const codeHash = await bcrypt.hash(code, SALT_ROUNDS);
+
+    await this.redisCache.set(
+      `password-reset:code:${user.id}`,
+      { codeHash },
+      RESET_CODE_TTL_SECONDS,
+    );
+    await this.redisCache.del(`password-reset:attempts:${user.id}`);
+    await this.passwordResetEmail.sendResetCode(user.email, code);
+
     return genericResponse;
   }
 
-  const code = randomInt(100000, 1000000).toString();
-  const codeHash = await bcrypt.hash(code, SALT_ROUNDS);
+  async validateResetCode(
+    dto: ValidateResetCodeDto,
+  ): Promise<{ resetToken: string }> {
+    const user = await this.usersRepository.findByEmail(dto.email);
+    if (!user) {
+      throw new BadRequestException(INVALID_CODE_MESSAGE);
+    }
 
-  await this.redisCache.set(
-    `password-reset:code:${user.id}`,
-    { codeHash },
-    RESET_CODE_TTL_SECONDS,
-  );
-  await this.redisCache.del(`password-reset:attempts:${user.id}`);
-  await this.passwordResetEmail.sendResetCode(user.email, code);
+    const attempts = await this.redisCache.incr(
+      `password-reset:attempts:${user.id}`,
+      RESET_CODE_TTL_SECONDS,
+    );
+    if (attempts > MAX_RESET_ATTEMPTS) {
+      await this.redisCache.del(`password-reset:code:${user.id}`);
+      throw new BadRequestException('Muitas tentativas. Peça um novo código.');
+    }
 
-  return genericResponse;
-}
+    const stored = await this.redisCache.get<{ codeHash: string }>(
+      `password-reset:code:${user.id}`,
+    );
+    if (!stored) {
+      throw new BadRequestException(INVALID_CODE_MESSAGE);
+    }
 
-async validateResetCode(dto: ValidateResetCodeDto): Promise<{ resetToken: string }> {
-  const user = await this.usersRepository.findByEmail(dto.email);
-  if (!user) {
-    throw new BadRequestException(INVALID_CODE_MESSAGE);
-  }
+    const codeMatches = await bcrypt.compare(dto.code, stored.codeHash);
+    if (!codeMatches) {
+      throw new BadRequestException(INVALID_CODE_MESSAGE);
+    }
 
-  const attempts = await this.redisCache.incr(
-    `password-reset:attempts:${user.id}`,
-    RESET_CODE_TTL_SECONDS,
-  );
-  if (attempts > MAX_RESET_ATTEMPTS) {
     await this.redisCache.del(`password-reset:code:${user.id}`);
-    throw new BadRequestException('Muitas tentativas. Peça um novo código.');
+    await this.redisCache.del(`password-reset:attempts:${user.id}`);
+
+    const resetToken = randomBytes(32).toString('hex');
+    const tokenHash = createHash('sha256').update(resetToken).digest('hex');
+    await this.redisCache.set(
+      `password-reset:token:${tokenHash}`,
+      { userId: user.id },
+      RESET_TOKEN_TTL_SECONDS,
+    );
+
+    return { resetToken };
   }
 
-  const stored = await this.redisCache.get<{ codeHash: string }>(
-    `password-reset:code:${user.id}`,
-  );
-  if (!stored) {
-    throw new BadRequestException(INVALID_CODE_MESSAGE);
+  async resetPassword(dto: ResetPasswordDto): Promise<{ message: string }> {
+    const tokenHash = createHash('sha256').update(dto.resetToken).digest('hex');
+    const stored = await this.redisCache.get<{ userId: string }>(
+      `password-reset:token:${tokenHash}`,
+    );
+    if (!stored) {
+      throw new BadRequestException('Token inválido ou expirado.');
+    }
+
+    const passwordHash = await bcrypt.hash(dto.newPassword, SALT_ROUNDS);
+    await this.usersRepository.updatePassword(stored.userId, passwordHash);
+    await this.redisCache.del(`password-reset:token:${tokenHash}`);
+
+    return { message: 'Senha atualizada com sucesso.' };
   }
-
-  const codeMatches = await bcrypt.compare(dto.code, stored.codeHash);
-  if (!codeMatches) {
-    throw new BadRequestException(INVALID_CODE_MESSAGE);
-  }
-
-  await this.redisCache.del(`password-reset:code:${user.id}`);
-  await this.redisCache.del(`password-reset:attempts:${user.id}`);
-
-  const resetToken = randomBytes(32).toString('hex');
-  const tokenHash = createHash('sha256').update(resetToken).digest('hex');
-  await this.redisCache.set(
-    `password-reset:token:${tokenHash}`,
-    { userId: user.id },
-    RESET_TOKEN_TTL_SECONDS,
-  );
-
-  return { resetToken };
-}
-
-async resetPassword(dto: ResetPasswordDto): Promise<{ message: string }> {
-  const tokenHash = createHash('sha256').update(dto.resetToken).digest('hex');
-  const stored = await this.redisCache.get<{ userId: string }>(
-    `password-reset:token:${tokenHash}`,
-  );
-  if (!stored) {
-    throw new BadRequestException('Token inválido ou expirado.');
-  }
-
-  const passwordHash = await bcrypt.hash(dto.newPassword, SALT_ROUNDS);
-  await this.usersRepository.updatePassword(stored.userId, passwordHash);
-  await this.redisCache.del(`password-reset:token:${tokenHash}`);
-
-  return { message: 'Senha atualizada com sucesso.' };
-}
 }

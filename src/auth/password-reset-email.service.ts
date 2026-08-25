@@ -9,7 +9,8 @@ export class PasswordResetEmailService {
   async sendResetCode(to: string, code: string): Promise<void> {
     try {
       await this.resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL ?? 'Bufunfa+ <onboarding@resend.dev>',
+        from:
+          process.env.RESEND_FROM_EMAIL ?? 'Bufunfa+ <onboarding@resend.dev>',
         to,
         subject: 'Seu código para redefinir a senha',
         html: `
