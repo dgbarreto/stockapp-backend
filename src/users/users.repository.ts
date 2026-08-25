@@ -4,7 +4,7 @@ import { User } from '../../generated/prisma/client';
 
 @Injectable()
 export class UsersRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   findByEmail(email: string): Promise<User | null> {
     return this.prisma.user.findUnique({ where: { email } });
@@ -12,6 +12,10 @@ export class UsersRepository {
 
   findById(id: string): Promise<User | null> {
     return this.prisma.user.findUnique({ where: { id } });
+  }
+
+  updatePassword(id: string, passwordHash: string): Promise<User> {
+    return this.prisma.user.update({ where: { id }, data: { passwordHash } });
   }
 
   create(data: {

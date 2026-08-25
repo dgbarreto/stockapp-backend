@@ -6,11 +6,14 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
 import { JwksController } from './jwks.controller';
+import { CacheModule } from 'src/cache/cache.module';
+import { PasswordResetEmailService } from './password-reset-email.service';
 
 @Module({
   imports: [
     UsersModule,
     PassportModule,
+    CacheModule,
     JwtModule.register({
       privateKey: process.env.JWT_PRIVATE_KEY,
       publicKey: process.env.JWT_PUBLIC_KEY,
@@ -23,6 +26,6 @@ import { JwksController } from './jwks.controller';
     }),
   ],
   controllers: [AuthController, JwksController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, PasswordResetEmailService],
 })
 export class AuthModule {}
