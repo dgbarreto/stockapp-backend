@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { DividendEvent, DividendMetrics, DividendsProvider } from './dividends.provider';
+import {
+  DividendEvent,
+  DividendMetrics,
+  DividendsProvider,
+} from './dividends.provider';
 
 interface YahooDividendEvent {
   amount: number;

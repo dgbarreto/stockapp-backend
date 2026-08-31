@@ -21,7 +21,7 @@ export class PositionsService {
     private readonly tickerLogoProvider: TickerLogoProvider,
     @Inject(DIVIDENDS_PROVIDER)
     private readonly dividendsProvider: DividendsProvider,
-  ) { }
+  ) {}
 
   findAll(userId: string) {
     return this.positionsRepository.findAllByUser(userId);

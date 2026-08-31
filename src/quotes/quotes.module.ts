@@ -12,7 +12,12 @@ import { YahooPriceHistoryProvider } from './providers/yahoo-price-history.provi
 @Module({
   imports: [PrismaModule, KnownTickersModule, DividendsModule, CacheModule],
   controllers: [QuotesController],
-  providers: [QuotesService, BolsaiQuotesProvider, QuoteHistoryRepository, YahooPriceHistoryProvider],
+  providers: [
+    QuotesService,
+    BolsaiQuotesProvider,
+    QuoteHistoryRepository,
+    YahooPriceHistoryProvider,
+  ],
   exports: [QuotesService, YahooPriceHistoryProvider],
 })
 export class QuotesModule {}

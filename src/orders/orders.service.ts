@@ -11,7 +11,10 @@ import { guessAssetTypeOrder } from './ticker-type.util';
 import { randomUUID } from 'crypto';
 import { parseB3NegociacaoFile, parseBrDate } from './spreadsheet-parser.util';
 import { AssetType, Order, Prisma } from '../../generated/prisma/client';
-import { YahooPriceHistoryProvider, MonthlyClose } from 'src/quotes/providers/yahoo-price-history.provider';
+import {
+  YahooPriceHistoryProvider,
+  MonthlyClose,
+} from 'src/quotes/providers/yahoo-price-history.provider';
 
 export interface ImportOrdersResult {
   importBatchId: string;
@@ -30,7 +33,7 @@ export class OrdersService {
     private readonly fiisService: FiisService,
     private readonly knownTickersRepository: KnownTickersRepository,
     private readonly priceHistoryProvider: YahooPriceHistoryProvider,
-  ) { }
+  ) {}
 
   findAll(userId: string, ticker?: string) {
     return this.ordersRepository.findAllByUser(userId, ticker?.toUpperCase());
@@ -325,13 +328,18 @@ export class OrdersService {
     const now = new Date();
     const monthEnds: Date[] = [];
     for (let i = months - 1; i >= 0; i--) {
-      monthEnds.push(new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59));
+      monthEnds.push(
+        new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59),
+      );
     }
 
     const closesByTicker = new Map<string, MonthlyClose[]>();
     await Promise.all(
       tickers.map(async (ticker) => {
-        const closes = await this.priceHistoryProvider.getMonthlyCloses(ticker, months);
+        const closes = await this.priceHistoryProvider.getMonthlyCloses(
+          ticker,
+          months,
+        );
         closesByTicker.set(ticker, closes);
       }),
     );
@@ -344,7 +352,10 @@ export class OrdersService {
           monthEnd,
         );
         if (qty <= 0) continue;
-        const close = closestCloseAtOrBefore(closesByTicker.get(ticker) ?? [], monthEnd);
+        const close = closestCloseAtOrBefore(
+          closesByTicker.get(ticker) ?? [],
+          monthEnd,
+        );
         if (close != null) totalValue += qty * close;
       }
       return {
@@ -364,7 +375,10 @@ function quantityHeldAt(ordersForTicker: Order[], at: Date): number {
   return qty;
 }
 
-function closestCloseAtOrBefore(closes: MonthlyClose[], at: Date): number | null {
+function closestCloseAtOrBefore(
+  closes: MonthlyClose[],
+  at: Date,
+): number | null {
   let result: number | null = null;
   for (const c of closes) {
     if (c.date <= at) result = c.close;

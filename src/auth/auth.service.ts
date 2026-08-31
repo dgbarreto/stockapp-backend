@@ -29,7 +29,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly redisCache: RedisCacheService,
     private readonly passwordResetEmail: PasswordResetEmailService,
-  ) { }
+  ) {}
 
   async register(dto: RegisterDto) {
     const existing = await this.usersRepository.findByEmail(dto.email);

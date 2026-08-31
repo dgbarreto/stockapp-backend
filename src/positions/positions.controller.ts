@@ -6,7 +6,7 @@ import type { AuthenticatedRequest } from '../auth/authenticated-request';
 @UseGuards(JwtAuthGuard)
 @Controller('positions')
 export class PositionsController {
-  constructor(private readonly positionsService: PositionsService) { }
+  constructor(private readonly positionsService: PositionsService) {}
 
   @Get()
   findAll(@Request() req: AuthenticatedRequest) {

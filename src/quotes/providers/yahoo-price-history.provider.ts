@@ -19,7 +19,10 @@ interface YahooChartResponse {
 export class YahooPriceHistoryProvider {
   private readonly baseUrl = 'https://query1.finance.yahoo.com';
 
-  async getMonthlyCloses(ticker: string, months: number): Promise<MonthlyClose[]> {
+  async getMonthlyCloses(
+    ticker: string,
+    months: number,
+  ): Promise<MonthlyClose[]> {
     const yahooTicker = `${ticker}.SA`;
     const response = await fetch(
       `${this.baseUrl}/v8/finance/chart/${yahooTicker}?range=2y&interval=1mo`,

@@ -23,7 +23,7 @@ import type { AuthenticatedRequest } from '../auth/authenticated-request';
 @UseGuards(JwtAuthGuard)
 @Controller('orders')
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) { }
+  constructor(private readonly ordersService: OrdersService) {}
 
   @Get()
   findAll(
@@ -72,6 +72,9 @@ export class OrdersController {
     @Request() req: AuthenticatedRequest,
     @Query('months') months?: string,
   ) {
-    return this.ordersService.getMonthlyHistory(req.user.userId, months ? parseInt(months, 10) : 12);
+    return this.ordersService.getMonthlyHistory(
+      req.user.userId,
+      months ? parseInt(months, 10) : 12,
+    );
   }
 }
