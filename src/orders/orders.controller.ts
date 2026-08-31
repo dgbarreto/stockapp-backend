@@ -23,7 +23,7 @@ import type { AuthenticatedRequest } from '../auth/authenticated-request';
 @UseGuards(JwtAuthGuard)
 @Controller('orders')
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(private readonly ordersService: OrdersService) { }
 
   @Get()
   findAll(
@@ -65,5 +65,13 @@ export class OrdersController {
   @Delete(':id')
   remove(@Request() req: AuthenticatedRequest, @Param('id') id: string) {
     return this.ordersService.remove(req.user.userId, id);
+  }
+
+  @Get('portfolio-history')
+  getPortfolioHistory(
+    @Request() req: AuthenticatedRequest,
+    @Query('months') months?: string,
+  ) {
+    return this.ordersService.getMonthlyHistory(req.user.userId, months ? parseInt(months, 10) : 12);
   }
 }

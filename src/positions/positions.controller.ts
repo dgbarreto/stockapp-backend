@@ -6,7 +6,7 @@ import type { AuthenticatedRequest } from '../auth/authenticated-request';
 @UseGuards(JwtAuthGuard)
 @Controller('positions')
 export class PositionsController {
-  constructor(private readonly positionsService: PositionsService) {}
+  constructor(private readonly positionsService: PositionsService) { }
 
   @Get()
   findAll(@Request() req: AuthenticatedRequest) {
@@ -16,5 +16,10 @@ export class PositionsController {
   @Get('summary')
   getSummary(@Request() req: AuthenticatedRequest) {
     return this.positionsService.getSummary(req.user.userId);
+  }
+
+  @Get('dividends/monthly')
+  getMonthlyDividends(@Request() req: AuthenticatedRequest) {
+    return this.positionsService.getMonthlyDividends(req.user.userId);
   }
 }
