@@ -7,11 +7,17 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { KnownTickersModule } from 'src/known-tickers/known-tickers.module';
 import { DividendsModule } from 'src/dividends/dividends.module';
 import { CacheModule } from 'src/cache/cache.module';
+import { YahooPriceHistoryProvider } from './providers/yahoo-price-history.provider';
 
 @Module({
   imports: [PrismaModule, KnownTickersModule, DividendsModule, CacheModule],
   controllers: [QuotesController],
-  providers: [QuotesService, BolsaiQuotesProvider, QuoteHistoryRepository],
-  exports: [QuotesService],
+  providers: [
+    QuotesService,
+    BolsaiQuotesProvider,
+    QuoteHistoryRepository,
+    YahooPriceHistoryProvider,
+  ],
+  exports: [QuotesService, YahooPriceHistoryProvider],
 })
 export class QuotesModule {}

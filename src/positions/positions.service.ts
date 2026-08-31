@@ -10,6 +10,7 @@ import { FiisService } from 'src/fiis/fiis.service';
 import { DIVIDENDS_PROVIDER } from '../dividends/providers/dividends.provider';
 import type { DividendsProvider } from '../dividends/providers/dividends.provider';
 import type { BolsaiFundamentals } from '../quotes/providers/bolsai-quotes.provider';
+import { MonthlyDividendsDto } from './dto/monthly-dividends.dto';
 
 @Injectable()
 export class PositionsService {
@@ -130,5 +131,41 @@ export class PositionsService {
       profitPercent,
       positions: itemsWithAllocation,
     };
+  }
+
+  async getMonthlyDividends(userId: string): Promise<MonthlyDividendsDto> {
+    const positions = await this.positionsRepository.findAllByUser(userId);
+
+    const now = new Date();
+    const monthStart = Math.floor(
+      new Date(now.getFullYear(), now.getMonth(), 1).getTime() / 1000,
+    );
+    const monthEnd = Math.floor(
+      new Date(now.getFullYear(), now.getMonth() + 1, 1).getTime() / 1000,
+    );
+
+    const eventsByPosition = await Promise.allSettled(
+      positions.map((p) =>
+        this.dividendsProvider.getDividendEventsInRange(
+          p.ticker,
+          monthStart,
+          monthEnd,
+        ),
+      ),
+    );
+
+    let totalValue = 0;
+    let paymentsCount = 0;
+
+    positions.forEach((position, i) => {
+      const result = eventsByPosition[i];
+      if (result.status !== 'fulfilled') return;
+      for (const event of result.value) {
+        totalValue += event.amount * position.quantity;
+        paymentsCount += 1;
+      }
+    });
+
+    return { totalValue, paymentsCount };
   }
 }

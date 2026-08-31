@@ -17,4 +17,9 @@ export class PositionsController {
   getSummary(@Request() req: AuthenticatedRequest) {
     return this.positionsService.getSummary(req.user.userId);
   }
+
+  @Get('dividends/monthly')
+  getMonthlyDividends(@Request() req: AuthenticatedRequest) {
+    return this.positionsService.getMonthlyDividends(req.user.userId);
+  }
 }

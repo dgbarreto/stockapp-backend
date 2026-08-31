@@ -66,4 +66,15 @@ export class OrdersController {
   remove(@Request() req: AuthenticatedRequest, @Param('id') id: string) {
     return this.ordersService.remove(req.user.userId, id);
   }
+
+  @Get('portfolio-history')
+  getPortfolioHistory(
+    @Request() req: AuthenticatedRequest,
+    @Query('months') months?: string,
+  ) {
+    return this.ordersService.getMonthlyHistory(
+      req.user.userId,
+      months ? parseInt(months, 10) : 12,
+    );
+  }
 }

@@ -151,4 +151,16 @@ export class AuthService {
 
     return { message: 'Senha atualizada com sucesso.' };
   }
+
+  async getProfile(userId: string) {
+    const user = await this.usersRepository.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+    return {
+      name: user.name,
+      email: user.email,
+      createdAt: user.createdAt.toISOString(),
+    };
+  }
 }

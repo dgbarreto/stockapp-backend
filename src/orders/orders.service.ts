@@ -3,7 +3,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { OrdersRepository } from './orders.repository';
 import { PositionsRepository } from '../positions/positions.repository';
 import { CreateOrderDto, UpdateOrderDto } from './dto/create-order.dto';
-import { AssetType, Prisma } from '../../generated/prisma/client';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { QuotesService } from 'src/quotes/quotes.service';
 import { FiisService } from 'src/fiis/fiis.service';
@@ -11,6 +10,11 @@ import { KnownTickersRepository } from 'src/known-tickers/known-tickers.reposito
 import { guessAssetTypeOrder } from './ticker-type.util';
 import { randomUUID } from 'crypto';
 import { parseB3NegociacaoFile, parseBrDate } from './spreadsheet-parser.util';
+import { AssetType, Order, Prisma } from '../../generated/prisma/client';
+import {
+  YahooPriceHistoryProvider,
+  MonthlyClose,
+} from 'src/quotes/providers/yahoo-price-history.provider';
 
 export interface ImportOrdersResult {
   importBatchId: string;
@@ -28,6 +32,7 @@ export class OrdersService {
     private readonly quotesService: QuotesService,
     private readonly fiisService: FiisService,
     private readonly knownTickersRepository: KnownTickersRepository,
+    private readonly priceHistoryProvider: YahooPriceHistoryProvider,
   ) {}
 
   findAll(userId: string, ticker?: string) {
@@ -312,4 +317,72 @@ export class OrdersService {
 
     return { importBatchId, totalRows: rows.length, created, skipped };
   }
+
+  async getMonthlyHistory(userId: string, months = 12) {
+    const orders = await this.ordersRepository.findAllByUser(userId);
+    const ordersAsc = [...orders].sort(
+      (a, b) => a.executedAt.getTime() - b.executedAt.getTime(),
+    );
+    const tickers = [...new Set(ordersAsc.map((o) => o.ticker))];
+
+    const now = new Date();
+    const monthEnds: Date[] = [];
+    for (let i = months - 1; i >= 0; i--) {
+      monthEnds.push(
+        new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59),
+      );
+    }
+
+    const closesByTicker = new Map<string, MonthlyClose[]>();
+    await Promise.all(
+      tickers.map(async (ticker) => {
+        const closes = await this.priceHistoryProvider.getMonthlyCloses(
+          ticker,
+          months,
+        );
+        closesByTicker.set(ticker, closes);
+      }),
+    );
+
+    return monthEnds.map((monthEnd) => {
+      let totalValue = 0;
+      for (const ticker of tickers) {
+        const qty = quantityHeldAt(
+          ordersAsc.filter((o) => o.ticker === ticker),
+          monthEnd,
+        );
+        if (qty <= 0) continue;
+        const close = closestCloseAtOrBefore(
+          closesByTicker.get(ticker) ?? [],
+          monthEnd,
+        );
+        if (close != null) totalValue += qty * close;
+      }
+      return {
+        month: `${monthEnd.getFullYear()}-${String(monthEnd.getMonth() + 1).padStart(2, '0')}`,
+        totalValue,
+      };
+    });
+  }
+}
+
+function quantityHeldAt(ordersForTicker: Order[], at: Date): number {
+  let qty = 0;
+  for (const o of ordersForTicker) {
+    if (o.executedAt > at) break;
+    qty += o.side === 'BUY' ? o.quantity : -o.quantity;
+  }
+  return qty;
+}
+
+function closestCloseAtOrBefore(
+  closes: MonthlyClose[],
+  at: Date,
+): number | null {
+  let result: number | null = null;
+  for (const c of closes) {
+    if (c.date <= at) result = c.close;
+    else break;
+  }
+  return result ?? closes[0]?.close ?? null;
 }
