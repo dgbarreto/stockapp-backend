@@ -32,7 +32,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('me')
   me(@Request() req: AuthenticatedRequest) {
-    return req.user;
+    return this.authService.getProfile(req.user.userId);
   }
 
   @Post('forgot-password')

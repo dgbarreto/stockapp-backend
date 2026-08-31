@@ -29,7 +29,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly redisCache: RedisCacheService,
     private readonly passwordResetEmail: PasswordResetEmailService,
-  ) {}
+  ) { }
 
   async register(dto: RegisterDto) {
     const existing = await this.usersRepository.findByEmail(dto.email);
@@ -150,5 +150,17 @@ export class AuthService {
     await this.redisCache.del(`password-reset:token:${tokenHash}`);
 
     return { message: 'Senha atualizada com sucesso.' };
+  }
+
+  async getProfile(userId: string) {
+    const user = await this.usersRepository.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+    return {
+      name: user.name,
+      email: user.email,
+      createdAt: user.createdAt.toISOString(),
+    };
   }
 }
