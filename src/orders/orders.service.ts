@@ -20,6 +20,13 @@ export interface ImportOrdersResult {
   importBatchId: string;
   totalRows: number;
   created: number;
+  createdRows: {
+    row: number;
+    ticker: string;
+    side: 'BUY' | 'SELL';
+    quantity: number;
+    price: number;
+  }[];
   skipped: { row: number; ticker: string | null; reason: string }[];
 }
 
@@ -33,7 +40,7 @@ export class OrdersService {
     private readonly fiisService: FiisService,
     private readonly knownTickersRepository: KnownTickersRepository,
     private readonly priceHistoryProvider: YahooPriceHistoryProvider,
-  ) {}
+  ) { }
 
   findAll(userId: string, ticker?: string) {
     return this.ordersRepository.findAllByUser(userId, ticker?.toUpperCase());
@@ -315,7 +322,19 @@ export class OrdersService {
       });
     }
 
-    return { importBatchId, totalRows: rows.length, created, skipped };
+    return {
+      importBatchId,
+      totalRows: rows.length,
+      created,
+      createdRows: ordersToCreate.map((row) => ({
+        row: row.rowIndex,
+        ticker: row.ticker,
+        side: row.side,
+        quantity: row.quantity,
+        price: row.price,
+      })),
+      skipped,
+    };
   }
 
   async getMonthlyHistory(userId: string, months = 12) {
