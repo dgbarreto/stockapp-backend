@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { QuotesService } from './quotes.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -7,6 +7,10 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 export class QuotesController {
   constructor(private readonly quotesService: QuotesService) {}
 
+  @Get('list')
+  async getPopularQuotes(@Query('limit') limit?: string) {
+    return this.quotesService.getPopularQuotes(limit ? Number(limit) : undefined);
+  }
   @Get(':ticker/history')
   async getHistory(@Param('ticker') ticker: string) {
     return this.quotesService.getHistory(ticker);

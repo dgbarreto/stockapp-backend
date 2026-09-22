@@ -4,10 +4,18 @@ import { AssetType, KnownTicker } from '../../generated/prisma/client';
 
 @Injectable()
 export class KnownTickersRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   findByTicker(ticker: string): Promise<KnownTicker | null> {
     return this.prisma.knownTicker.findUnique({ where: { ticker } });
+  }
+
+  findMostRecent(assetType: AssetType, limit: number): Promise<KnownTicker[]> {
+    return this.prisma.knownTicker.findMany({
+      where: { assetType },
+      orderBy: { updatedAt: 'desc' },
+      take: limit,
+    });
   }
 
   async upsert(ticker: string, assetType: AssetType): Promise<void> {

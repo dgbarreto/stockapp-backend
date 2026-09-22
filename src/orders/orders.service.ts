@@ -13,7 +13,7 @@ import { parseB3NegociacaoFile, parseBrDate } from './spreadsheet-parser.util';
 import { AssetType, Order, Prisma } from '../../generated/prisma/client';
 import {
   YahooPriceHistoryProvider,
-  MonthlyClose,
+  PriceClose,
 } from 'src/quotes/providers/yahoo-price-history.provider';
 
 export interface ImportOrdersResult {
@@ -352,7 +352,7 @@ export class OrdersService {
       );
     }
 
-    const closesByTicker = new Map<string, MonthlyClose[]>();
+    const closesByTicker = new Map<string, PriceClose[]>();
     await Promise.all(
       tickers.map(async (ticker) => {
         const closes = await this.priceHistoryProvider.getMonthlyCloses(
@@ -395,7 +395,7 @@ function quantityHeldAt(ordersForTicker: Order[], at: Date): number {
 }
 
 function closestCloseAtOrBefore(
-  closes: MonthlyClose[],
+  closes: PriceClose[],
   at: Date,
 ): number | null {
   let result: number | null = null;
