@@ -75,6 +75,10 @@ export class QuotesService {
     return summaries;
   }
 
+  async getPrices(ticker: string, range: '1m' | '6m' | '1y' | 'max') {
+    return this.priceHistoryProvider.getPricesForRange(ticker.toUpperCase(), range);
+  }
+
   private async getQuoteSummary(ticker: string): Promise<QuoteSummary> {
     const cacheKey = `yahoo:daily:${ticker}`;
     let closes = await this.cache.get<number[]>(cacheKey);

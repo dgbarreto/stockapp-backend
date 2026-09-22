@@ -5,7 +5,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 @UseGuards(JwtAuthGuard)
 @Controller('fiis')
 export class FiisController {
-  constructor(private readonly fiisService: FiisService) {}
+  constructor(private readonly fiisService: FiisService) { }
 
   @Get('list')
   async getPopularFiis(@Query('limit') limit?: string) {
@@ -20,5 +20,13 @@ export class FiisController {
   @Get(':ticker')
   async getFii(@Param('ticker') ticker: string) {
     return this.fiisService.getFii(ticker);
+  }
+
+  @Get(':ticker/prices')
+  async getPrices(
+    @Param('ticker') ticker: string,
+    @Query('range') range: '1m' | '6m' | '1y' | 'max' = '1m',
+  ) {
+    return this.fiisService.getPrices(ticker, range);
   }
 }

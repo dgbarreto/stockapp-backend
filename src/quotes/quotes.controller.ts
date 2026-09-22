@@ -5,7 +5,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 @UseGuards(JwtAuthGuard)
 @Controller('quotes')
 export class QuotesController {
-  constructor(private readonly quotesService: QuotesService) {}
+  constructor(private readonly quotesService: QuotesService) { }
 
   @Get('list')
   async getPopularQuotes(@Query('limit') limit?: string) {
@@ -19,5 +19,13 @@ export class QuotesController {
   @Get(':ticker')
   async getFundamentals(@Param('ticker') ticker: string) {
     return this.quotesService.getFundamentals(ticker);
+  }
+
+  @Get(':ticker/prices')
+  async getPrices(
+    @Param('ticker') ticker: string,
+    @Query('range') range: '1m' | '6m' | '1y' | 'max' = '1m',
+  ) {
+    return this.quotesService.getPrices(ticker, range);
   }
 }

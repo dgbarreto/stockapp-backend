@@ -29,6 +29,17 @@ export class YahooPriceHistoryProvider {
     return points.slice(-days);
   }
 
+  async getPricesForRange(ticker: string, range: '1m' | '6m' | '1y' | 'max'): Promise<PriceClose[]> {
+    const config: Record<typeof range, { yahooRange: string; interval: string }> = {
+      '1m': { yahooRange: '1mo', interval: '1d' },
+      '6m': { yahooRange: '6mo', interval: '1d' },
+      '1y': { yahooRange: '1y', interval: '1wk' },
+      'max': { yahooRange: 'max', interval: '1mo' },
+    };
+    const { yahooRange, interval } = config[range];
+    return this.fetchCloses(ticker, yahooRange, interval);
+  }
+
   private async fetchCloses(
     ticker: string,
     range: string,

@@ -77,6 +77,10 @@ export class FiisService {
     return summaries;
   }
 
+  async getPrices(ticker: string, range: '1m' | '6m' | '1y' | 'max') {
+    return this.priceHistoryProvider.getPricesForRange(ticker.toUpperCase(), range);
+  }
+
   private async getFiiSummary(ticker: string): Promise<FiiSummary> {
     const cacheKey = `yahoo:daily:${ticker}`;
     let closes = await this.cache.get<number[]>(cacheKey);
