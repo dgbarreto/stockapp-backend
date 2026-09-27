@@ -15,6 +15,7 @@ import { PasswordResetEmailService } from './password-reset-email.service';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ValidateResetCodeDto } from './dto/validate-reset-code.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 const SALT_ROUNDS = 10;
 const RESET_CODE_TTL_SECONDS = 900; // 15 min
@@ -29,7 +30,8 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly redisCache: RedisCacheService,
     private readonly passwordResetEmail: PasswordResetEmailService,
-  ) {}
+    private readonly prisma: PrismaService,
+  ) { }
 
   async register(dto: RegisterDto) {
     const existing = await this.usersRepository.findByEmail(dto.email);
@@ -157,10 +159,12 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException();
     }
+    const ordersCount = await this.prisma.order.count({ where: { userId } });
     return {
       name: user.name,
       email: user.email,
       createdAt: user.createdAt.toISOString(),
+      ordersCount,
     };
   }
 }
