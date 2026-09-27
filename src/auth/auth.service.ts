@@ -31,7 +31,7 @@ export class AuthService {
     private readonly redisCache: RedisCacheService,
     private readonly passwordResetEmail: PasswordResetEmailService,
     private readonly prisma: PrismaService,
-  ) { }
+  ) {}
 
   async register(dto: RegisterDto) {
     const existing = await this.usersRepository.findByEmail(dto.email);
