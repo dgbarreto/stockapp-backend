@@ -4,6 +4,8 @@ import { BolsaiQuotesProvider } from './providers/bolsai-quotes.provider';
 import { QuoteHistoryRepository } from './quote-history.repository';
 import { KnownTickersRepository } from 'src/known-tickers/known-tickers.repository';
 import { DIVIDENDS_PROVIDER } from '../dividends/providers/dividends.provider';
+import { RedisCacheService } from 'src/cache/redis-cache.service';
+import { YahooPriceHistoryProvider } from './providers/yahoo-price-history.provider';
 
 describe('QuotesService', () => {
   let service: QuotesService;
@@ -15,6 +17,8 @@ describe('QuotesService', () => {
         { provide: BolsaiQuotesProvider, useValue: {} },
         { provide: QuoteHistoryRepository, useValue: {} },
         { provide: KnownTickersRepository, useValue: {} },
+        { provide: YahooPriceHistoryProvider, useValue: {} },
+        { provide: RedisCacheService, useValue: {} },
         { provide: DIVIDENDS_PROVIDER, useValue: {} },
       ],
     }).compile();
