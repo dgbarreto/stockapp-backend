@@ -36,7 +36,7 @@ export class FiisService {
     private readonly cache: RedisCacheService,
     @Inject(DIVIDENDS_PROVIDER)
     private readonly dividendsProvider: DividendsProvider,
-  ) { }
+  ) {}
 
   async getFii(ticker: string): Promise<FiiResponse> {
     const normalizedTicker = ticker.toUpperCase();
@@ -60,9 +60,15 @@ export class FiisService {
   }
 
   async getPopularFiis(limit = 8): Promise<FiiSummary[]> {
-    const known = await this.knownTickersRepository.findMostRecent('FII', limit);
-    const tickers = known.length > 0 ? known.map((k) => k.ticker) : FALLBACK_FII_TICKERS;
-    const results = await Promise.allSettled(tickers.map((ticker) => this.getFiiSummary(ticker)));
+    const known = await this.knownTickersRepository.findMostRecent(
+      'FII',
+      limit,
+    );
+    const tickers =
+      known.length > 0 ? known.map((k) => k.ticker) : FALLBACK_FII_TICKERS;
+    const results = await Promise.allSettled(
+      tickers.map((ticker) => this.getFiiSummary(ticker)),
+    );
 
     const summaries: FiiSummary[] = [];
     results.forEach((result, index) => {
@@ -78,7 +84,10 @@ export class FiisService {
   }
 
   async getPrices(ticker: string, range: '1m' | '6m' | '1y' | 'max') {
-    return this.priceHistoryProvider.getPricesForRange(ticker.toUpperCase(), range);
+    return this.priceHistoryProvider.getPricesForRange(
+      ticker.toUpperCase(),
+      range,
+    );
   }
 
   private async getFiiSummary(ticker: string): Promise<FiiSummary> {

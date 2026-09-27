@@ -35,7 +35,7 @@ export class QuotesService {
     private readonly cache: RedisCacheService,
     @Inject(DIVIDENDS_PROVIDER)
     private readonly dividendsProvider: DividendsProvider,
-  ) { }
+  ) {}
 
   async getFundamentals(ticker: string): Promise<QuoteFundamentalsResponse> {
     const normalizedTicker = ticker.toUpperCase();
@@ -58,9 +58,15 @@ export class QuotesService {
   }
 
   async getPopularQuotes(limit = 8): Promise<QuoteSummary[]> {
-    const known = await this.knownTickersRepository.findMostRecent('STOCK', limit);
-    const tickers = known.length > 0 ? known.map((k) => k.ticker) : FALLBACK_STOCK_TICKERS;
-    const results = await Promise.allSettled(tickers.map((ticker) => this.getQuoteSummary(ticker)));
+    const known = await this.knownTickersRepository.findMostRecent(
+      'STOCK',
+      limit,
+    );
+    const tickers =
+      known.length > 0 ? known.map((k) => k.ticker) : FALLBACK_STOCK_TICKERS;
+    const results = await Promise.allSettled(
+      tickers.map((ticker) => this.getQuoteSummary(ticker)),
+    );
 
     const summaries: QuoteSummary[] = [];
     results.forEach((result, index) => {
@@ -76,7 +82,10 @@ export class QuotesService {
   }
 
   async getPrices(ticker: string, range: '1m' | '6m' | '1y' | 'max') {
-    return this.priceHistoryProvider.getPricesForRange(ticker.toUpperCase(), range);
+    return this.priceHistoryProvider.getPricesForRange(
+      ticker.toUpperCase(),
+      range,
+    );
   }
 
   private async getQuoteSummary(ticker: string): Promise<QuoteSummary> {

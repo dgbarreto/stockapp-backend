@@ -5,7 +5,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 @UseGuards(JwtAuthGuard)
 @Controller('fiis')
 export class FiisController {
-  constructor(private readonly fiisService: FiisService) { }
+  constructor(private readonly fiisService: FiisService) {}
 
   @Get('list')
   async getPopularFiis(@Query('limit') limit?: string) {

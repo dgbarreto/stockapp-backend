@@ -4,7 +4,7 @@ import { AssetType, KnownTicker } from '../../generated/prisma/client';
 
 @Injectable()
 export class KnownTickersRepository {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   findByTicker(ticker: string): Promise<KnownTicker | null> {
     return this.prisma.knownTicker.findUnique({ where: { ticker } });

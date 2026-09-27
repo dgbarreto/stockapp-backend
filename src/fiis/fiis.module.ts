@@ -10,7 +10,13 @@ import { CacheModule } from 'src/cache/cache.module';
 import { QuotesModule } from 'src/quotes/quotes.module';
 
 @Module({
-  imports: [PrismaModule, KnownTickersModule, DividendsModule, CacheModule, QuotesModule],
+  imports: [
+    PrismaModule,
+    KnownTickersModule,
+    DividendsModule,
+    CacheModule,
+    QuotesModule,
+  ],
   controllers: [FiisController],
   providers: [FiisService, BolsaiFiisProvider, FiiHistoryRepository],
   exports: [FiisService],

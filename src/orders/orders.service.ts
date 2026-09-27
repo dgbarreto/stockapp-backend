@@ -40,7 +40,7 @@ export class OrdersService {
     private readonly fiisService: FiisService,
     private readonly knownTickersRepository: KnownTickersRepository,
     private readonly priceHistoryProvider: YahooPriceHistoryProvider,
-  ) { }
+  ) {}
 
   findAll(userId: string, ticker?: string) {
     return this.ordersRepository.findAllByUser(userId, ticker?.toUpperCase());
@@ -394,10 +394,7 @@ function quantityHeldAt(ordersForTicker: Order[], at: Date): number {
   return qty;
 }
 
-function closestCloseAtOrBefore(
-  closes: PriceClose[],
-  at: Date,
-): number | null {
+function closestCloseAtOrBefore(closes: PriceClose[], at: Date): number | null {
   let result: number | null = null;
   for (const c of closes) {
     if (c.date <= at) result = c.close;
