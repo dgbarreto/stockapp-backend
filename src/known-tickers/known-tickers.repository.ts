@@ -10,6 +10,14 @@ export class KnownTickersRepository {
     return this.prisma.knownTicker.findUnique({ where: { ticker } });
   }
 
+  findMostRecent(assetType: AssetType, limit: number): Promise<KnownTicker[]> {
+    return this.prisma.knownTicker.findMany({
+      where: { assetType },
+      orderBy: { updatedAt: 'desc' },
+      take: limit,
+    });
+  }
+
   async upsert(ticker: string, assetType: AssetType): Promise<void> {
     await this.prisma.knownTicker.upsert({
       where: { ticker },

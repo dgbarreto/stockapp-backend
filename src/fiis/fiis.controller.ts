@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { FiisService } from './fiis.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -6,6 +6,11 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 @Controller('fiis')
 export class FiisController {
   constructor(private readonly fiisService: FiisService) {}
+
+  @Get('list')
+  async getPopularFiis(@Query('limit') limit?: string) {
+    return this.fiisService.getPopularFiis(limit ? Number(limit) : undefined);
+  }
 
   @Get(':ticker/history')
   async getHistory(@Param('ticker') ticker: string) {
@@ -15,5 +20,13 @@ export class FiisController {
   @Get(':ticker')
   async getFii(@Param('ticker') ticker: string) {
     return this.fiisService.getFii(ticker);
+  }
+
+  @Get(':ticker/prices')
+  async getPrices(
+    @Param('ticker') ticker: string,
+    @Query('range') range: '1m' | '6m' | '1y' | 'max' = '1m',
+  ) {
+    return this.fiisService.getPrices(ticker, range);
   }
 }

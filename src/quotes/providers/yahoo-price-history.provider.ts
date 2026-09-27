@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-export interface MonthlyClose {
+export interface PriceClose {
   date: Date;
   close: number;
 }
@@ -22,10 +22,41 @@ export class YahooPriceHistoryProvider {
   async getMonthlyCloses(
     ticker: string,
     months: number,
-  ): Promise<MonthlyClose[]> {
+  ): Promise<PriceClose[]> {
+    const points = await this.fetchCloses(ticker, '2y', '1mo');
+    return points.slice(-(months + 1));
+  }
+
+  async getDailyCloses(ticker: string, days: number): Promise<PriceClose[]> {
+    const points = await this.fetchCloses(ticker, '3mo', '1d');
+    return points.slice(-days);
+  }
+
+  async getPricesForRange(
+    ticker: string,
+    range: '1m' | '6m' | '1y' | 'max',
+  ): Promise<PriceClose[]> {
+    const config: Record<
+      typeof range,
+      { yahooRange: string; interval: string }
+    > = {
+      '1m': { yahooRange: '1mo', interval: '1d' },
+      '6m': { yahooRange: '6mo', interval: '1d' },
+      '1y': { yahooRange: '1y', interval: '1wk' },
+      max: { yahooRange: 'max', interval: '1mo' },
+    };
+    const { yahooRange, interval } = config[range];
+    return this.fetchCloses(ticker, yahooRange, interval);
+  }
+
+  private async fetchCloses(
+    ticker: string,
+    range: string,
+    interval: string,
+  ): Promise<PriceClose[]> {
     const yahooTicker = `${ticker}.SA`;
     const response = await fetch(
-      `${this.baseUrl}/v8/finance/chart/${yahooTicker}?range=2y&interval=1mo`,
+      `${this.baseUrl}/v8/finance/chart/${yahooTicker}?range=${range}&interval=${interval}`,
     );
 
     if (!response.ok) {
@@ -39,10 +70,8 @@ export class YahooPriceHistoryProvider {
     if (!result) return [];
 
     const closes = result.indicators.quote[0]?.close ?? [];
-    const points = result.timestamp
+    return result.timestamp
       .map((ts, i) => ({ date: new Date(ts * 1000), close: closes[i] }))
-      .filter((p): p is MonthlyClose => p.close != null);
-
-    return points.slice(-(months + 1));
+      .filter((p): p is PriceClose => p.close != null);
   }
 }

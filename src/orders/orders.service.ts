@@ -13,13 +13,20 @@ import { parseB3NegociacaoFile, parseBrDate } from './spreadsheet-parser.util';
 import { AssetType, Order, Prisma } from '../../generated/prisma/client';
 import {
   YahooPriceHistoryProvider,
-  MonthlyClose,
+  PriceClose,
 } from 'src/quotes/providers/yahoo-price-history.provider';
 
 export interface ImportOrdersResult {
   importBatchId: string;
   totalRows: number;
   created: number;
+  createdRows: {
+    row: number;
+    ticker: string;
+    side: 'BUY' | 'SELL';
+    quantity: number;
+    price: number;
+  }[];
   skipped: { row: number; ticker: string | null; reason: string }[];
 }
 
@@ -315,7 +322,19 @@ export class OrdersService {
       });
     }
 
-    return { importBatchId, totalRows: rows.length, created, skipped };
+    return {
+      importBatchId,
+      totalRows: rows.length,
+      created,
+      createdRows: ordersToCreate.map((row) => ({
+        row: row.rowIndex,
+        ticker: row.ticker,
+        side: row.side,
+        quantity: row.quantity,
+        price: row.price,
+      })),
+      skipped,
+    };
   }
 
   async getMonthlyHistory(userId: string, months = 12) {
@@ -333,7 +352,7 @@ export class OrdersService {
       );
     }
 
-    const closesByTicker = new Map<string, MonthlyClose[]>();
+    const closesByTicker = new Map<string, PriceClose[]>();
     await Promise.all(
       tickers.map(async (ticker) => {
         const closes = await this.priceHistoryProvider.getMonthlyCloses(
@@ -375,10 +394,7 @@ function quantityHeldAt(ordersForTicker: Order[], at: Date): number {
   return qty;
 }
 
-function closestCloseAtOrBefore(
-  closes: MonthlyClose[],
-  at: Date,
-): number | null {
+function closestCloseAtOrBefore(closes: PriceClose[], at: Date): number | null {
   let result: number | null = null;
   for (const c of closes) {
     if (c.date <= at) result = c.close;

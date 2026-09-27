@@ -7,9 +7,16 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { KnownTickersModule } from 'src/known-tickers/known-tickers.module';
 import { DividendsModule } from 'src/dividends/dividends.module';
 import { CacheModule } from 'src/cache/cache.module';
+import { QuotesModule } from 'src/quotes/quotes.module';
 
 @Module({
-  imports: [PrismaModule, KnownTickersModule, DividendsModule, CacheModule],
+  imports: [
+    PrismaModule,
+    KnownTickersModule,
+    DividendsModule,
+    CacheModule,
+    QuotesModule,
+  ],
   controllers: [FiisController],
   providers: [FiisService, BolsaiFiisProvider, FiiHistoryRepository],
   exports: [FiisService],
