@@ -14,6 +14,7 @@ import type { AuthenticatedRequest } from './authenticated-request';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ValidateResetCodeDto } from './dto/validate-reset-code.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -48,5 +49,10 @@ export class AuthController {
   @Post('reset-password')
   resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto);
+  }
+
+  @Post('refresh')
+  refresh(@Body() dto: RefreshTokenDto) {
+    return this.authService.refreshAccessToken(dto.refreshToken);
   }
 }

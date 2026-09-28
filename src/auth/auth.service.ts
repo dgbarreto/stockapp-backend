@@ -22,6 +22,7 @@ const RESET_CODE_TTL_SECONDS = 900; // 15 min
 const RESET_TOKEN_TTL_SECONDS = 600; // 10 min
 const MAX_RESET_ATTEMPTS = 5;
 const INVALID_CODE_MESSAGE = 'Código inválido ou expirado.';
+const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 dias
 
 @Injectable()
 export class AuthService {
@@ -46,7 +47,7 @@ export class AuthService {
       name: dto.name,
     });
 
-    return this.buildToken(user.id, user.email);
+    return await this.buildToken(user.id, user.email);
   }
 
   async login(dto: LoginDto) {
@@ -63,12 +64,48 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    return this.buildToken(user.id, user.email);
+    return await this.buildToken(user.id, user.email);
   }
 
-  private buildToken(userId: string, email: string) {
+  private async buildToken(userId: string, email: string) {
     const accessToken = this.jwtService.sign({ sub: userId, email });
-    return { accessToken };
+    const refreshToken = randomBytes(48).toString('hex');
+
+    await this.prisma.refreshToken.create({
+      data: {
+        userId,
+        tokenHash: this.hashToken(refreshToken),
+        expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_MS),
+      },
+    });
+
+    return { accessToken, refreshToken };
+  }
+
+  private hashToken(token: string) {
+    return createHash('sha256').update(token).digest('hex');
+  }
+
+  async refreshAccessToken(refreshToken: string) {
+    const stored = await this.prisma.refreshToken.findUnique({
+      where: { tokenHash: this.hashToken(refreshToken) },
+      include: { user: true },
+    });
+    if (!stored || stored.revokedAt || stored.expiresAt < new Date()) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    // Rotação: revoga o token atual. O filtro revokedAt: null impede que
+    // duas chamadas simultâneas usem o mesmo token (só uma revoga).
+    const { count } = await this.prisma.refreshToken.updateMany({
+      where: { id: stored.id, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+    if (count === 0) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    return this.buildToken(stored.user.id, stored.user.email);
   }
 
   async forgotPassword(dto: ForgotPasswordDto): Promise<{ message: string }> {

@@ -48,6 +48,34 @@ paths:
       responses:
         '200':
           description: OK
+  /auth/refresh:
+    post:
+      summary: Renovação do access token
+      operationId: authRefresh
+      responses:
+        '200':
+          description: OK  
+  /auth/forgot-password:
+    post:
+      summary: Solicitação de redefinição de senha
+      operationId: authForgotPassword
+      responses:
+        '200':
+          description: OK           
+  /auth/validate-reset-code:
+    post:
+      summary: Validação do código de redefinição de senha
+      operationId: authValidateResetCode
+      responses:
+        '200':
+          description: OK           
+  /auth/reset-password:
+    post:
+      summary: Redefinição de senha
+      operationId: authResetPassword
+      responses:
+        '200':
+          description: OK           
   /quotes/{ticker}:
     get:
       summary: Cotação de uma ação
