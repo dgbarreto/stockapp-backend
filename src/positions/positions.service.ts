@@ -11,6 +11,8 @@ import { DIVIDENDS_PROVIDER } from '../dividends/providers/dividends.provider';
 import type { DividendsProvider } from '../dividends/providers/dividends.provider';
 import type { BolsaiFundamentals } from '../quotes/providers/bolsai-quotes.provider';
 import { MonthlyDividendsDto } from './dto/monthly-dividends.dto';
+import { formatCompanyName } from './company-name.util';
+import type { BolsaiFii } from '../fiis/providers/bolsai-fiis.provider';
 
 @Injectable()
 export class PositionsService {
@@ -21,7 +23,7 @@ export class PositionsService {
     private readonly tickerLogoProvider: TickerLogoProvider,
     @Inject(DIVIDENDS_PROVIDER)
     private readonly dividendsProvider: DividendsProvider,
-  ) {}
+  ) { }
 
   findAll(userId: string) {
     return this.positionsRepository.findAllByUser(userId);
@@ -85,9 +87,18 @@ export class PositionsService {
             : null
           : (fundamentals?.cagr_earnings_5y ?? null);
 
+      const rawName =
+        quote.status === 'fulfilled'
+          ? position.assetType === 'FII'
+            ? (quote.value as BolsaiFii).name
+            : (quote.value as BolsaiFundamentals).corporate_name
+          : null;
+      const companyName = formatCompanyName(rawName, position.ticker, position.assetType);
+
       return {
         id: position.id,
         ticker: position.ticker,
+        companyName,
         assetType: position.assetType,
         quantity: position.quantity,
         avgPrice: position.avgPrice,

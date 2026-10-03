@@ -5,6 +5,7 @@ const FUNDAMENTALS_TTL_SECONDS = 6 * 60 * 60; // 6h
 
 export interface BolsaiFundamentals {
   ticker: string;
+  corporate_name: string | null;
   close_price: number;
   market_cap: number;
   pl: number | null;

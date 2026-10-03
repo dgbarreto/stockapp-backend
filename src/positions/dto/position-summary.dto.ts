@@ -1,6 +1,7 @@
 export interface PositionSummaryItem {
   id: string;
   ticker: string;
+  companyName: string | null;
   assetType: string;
   quantity: number;
   avgPrice: number;
