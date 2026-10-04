@@ -9,13 +9,16 @@ import { DIVIDENDS_PROVIDER } from '../dividends/providers/dividends.provider';
 import type { DividendsProvider } from '../dividends/providers/dividends.provider';
 import { RedisCacheService } from 'src/cache/redis-cache.service';
 import { YahooPriceHistoryProvider } from './providers/yahoo-price-history.provider';
+import { formatCompanyName } from '../common/company-name.util';
 
 export interface QuoteFundamentalsResponse extends BolsaiFundamentals {
   dividendPerShareTtm: number | null;
+  company_name: string | null;
 }
 
 export interface QuoteSummary {
   ticker: string;
+  company_name: string | null;
   price: number;
   changePercent: number;
   sparkline: number[];
@@ -49,6 +52,11 @@ export class QuotesService {
     await this.knownTickersRepository.upsert(normalizedTicker, 'STOCK');
     return {
       ...fundamentals,
+      company_name: formatCompanyName(
+        fundamentals.corporate_name,
+        normalizedTicker,
+        'STOCK',
+      ),
       dividendPerShareTtm: dividendMetrics?.dividendPerShareTtm ?? null,
     };
   }
