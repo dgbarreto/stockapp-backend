@@ -17,6 +17,7 @@ export interface FiiResponse extends BolsaiFii {
 
 export interface FiiSummary {
   ticker: string;
+  company_name: string | null;
   price: number;
   changePercent: number;
   sparkline: number[];
@@ -47,7 +48,7 @@ export class FiisService {
         .catch(() => null),
     ]);
     await this.fiiHistoryRepository.save(normalizedTicker, fii);
-    await this.knownTickersRepository.upsert(normalizedTicker, 'FII');
+    await this.knownTickersRepository.upsert(normalizedTicker, 'FII', fii.name);
     return {
       ...fii,
       dividendPerShareTtm: dividendMetrics?.dividendPerShareTtm ?? null,
@@ -64,10 +65,14 @@ export class FiisService {
       'FII',
       limit,
     );
+
+    const namesByTicker = new Map(known.map((k) => [k.ticker, k.name]));
     const tickers =
       known.length > 0 ? known.map((k) => k.ticker) : FALLBACK_FII_TICKERS;
     const results = await Promise.allSettled(
-      tickers.map((ticker) => this.getFiiSummary(ticker)),
+      tickers.map((ticker) =>
+        this.getFiiSummary(ticker, namesByTicker.get(ticker) ?? null),
+      ),
     );
 
     const summaries: FiiSummary[] = [];
@@ -90,7 +95,10 @@ export class FiisService {
     );
   }
 
-  private async getFiiSummary(ticker: string): Promise<FiiSummary> {
+  private async getFiiSummary(
+    ticker: string,
+    companyName: string | null,
+  ): Promise<FiiSummary> {
     const cacheKey = `yahoo:daily:${ticker}`;
     let closes = await this.cache.get<number[]>(cacheKey);
     if (!closes) {
@@ -102,6 +110,7 @@ export class FiisService {
     const prev = closes.at(-2) ?? last;
     return {
       ticker,
+      company_name: companyName,
       price: last,
       changePercent: prev ? ((last - prev) / prev) * 100 : 0,
       sparkline: closes,

@@ -18,11 +18,16 @@ export class KnownTickersRepository {
     });
   }
 
-  async upsert(ticker: string, assetType: AssetType): Promise<void> {
+  async upsert(
+    ticker: string,
+    assetType: AssetType,
+    name?: string | null,
+  ): Promise<void> {
     await this.prisma.knownTicker.upsert({
       where: { ticker },
-      create: { ticker, assetType },
-      update: { assetType },
+      create: { ticker, assetType, name: name ?? null },
+      // Só sobrescreve o nome quando veio um — uma falha pontual não apaga o que já existe.
+      update: { assetType, ...(name ? { name } : {}) },
     });
   }
 }

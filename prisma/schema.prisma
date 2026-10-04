@@ -116,6 +116,7 @@ model Order {
 
 model KnownTicker {
   ticker    String    @id
+  name      String?
   assetType AssetType @map("asset_type")
   updatedAt DateTime  @updatedAt @map("updated_at")
 

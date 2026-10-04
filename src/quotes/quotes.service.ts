@@ -48,15 +48,20 @@ export class QuotesService {
         .getDividendMetrics(normalizedTicker)
         .catch(() => null),
     ]);
+    const companyName = formatCompanyName(
+      fundamentals.corporate_name,
+      normalizedTicker,
+      'STOCK',
+    );
     await this.quoteHistoryRepository.save(normalizedTicker, fundamentals);
-    await this.knownTickersRepository.upsert(normalizedTicker, 'STOCK');
+    await this.knownTickersRepository.upsert(
+      normalizedTicker,
+      'STOCK',
+      companyName,
+    );
     return {
       ...fundamentals,
-      company_name: formatCompanyName(
-        fundamentals.corporate_name,
-        normalizedTicker,
-        'STOCK',
-      ),
+      company_name: companyName,
       dividendPerShareTtm: dividendMetrics?.dividendPerShareTtm ?? null,
     };
   }
@@ -70,12 +75,14 @@ export class QuotesService {
       'STOCK',
       limit,
     );
+    const namesByTicker = new Map(known.map((k) => [k.ticker, k.name]));
     const tickers =
       known.length > 0 ? known.map((k) => k.ticker) : FALLBACK_STOCK_TICKERS;
     const results = await Promise.allSettled(
-      tickers.map((ticker) => this.getQuoteSummary(ticker)),
+      tickers.map((ticker) =>
+        this.getQuoteSummary(ticker, namesByTicker.get(ticker) ?? null),
+      ),
     );
-
     const summaries: QuoteSummary[] = [];
     results.forEach((result, index) => {
       if (result.status === 'fulfilled') {
@@ -96,7 +103,10 @@ export class QuotesService {
     );
   }
 
-  private async getQuoteSummary(ticker: string): Promise<QuoteSummary> {
+  private async getQuoteSummary(
+    ticker: string,
+    companyName: string | null,
+  ): Promise<QuoteSummary> {
     const cacheKey = `yahoo:daily:${ticker}`;
     let closes = await this.cache.get<number[]>(cacheKey);
     if (!closes) {
@@ -108,6 +118,7 @@ export class QuotesService {
     const prev = closes.at(-2) ?? last;
     return {
       ticker,
+      company_name: companyName,
       price: last,
       changePercent: prev ? ((last - prev) / prev) * 100 : 0,
       sparkline: closes,
